@@ -1,0 +1,4 @@
+首先 要run 那个system 先之前掀开 xampp app start 那个 apache 和 MySQL then 点 两个admin
+
+接下来直接去user 那边的 setup_database.php 点下去 那边 自然 会 create 那个table 给你
+
