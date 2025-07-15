@@ -271,21 +271,22 @@ $conn->close();
     <div class="sidebar">
         <div class="profile-section">
             <div class="profile-image">👤</div>
+            <p>Welcome, <?php echo htmlspecialchars($_SESSION['adminID']); ?>!</p>
         </div>
         
         <nav class="nav-menu">
-            <div class="nav-item">
+            <a href="dashboard.php" class="nav-item">
                 <span class="nav-icon"></span>
-                <a href="dashboard.php">Dashboard</a>
-            </div>
-            <div class="nav-item active">
+                Dashboard
+            </a>
+            <a href="AdminDM.php" class="nav-item active">
                 <span class="nav-icon"></span>
-                <a href="AdminDM.php">Device Management</a>
-            </div>
-            <div class="nav-item">
+                Device Management
+            </a>
+            <a href="alert.php" class="nav-item">
                 <span class="nav-icon"></span>
-                <a href="alert.php">Alert</a>
-            </div>
+                Alert
+            </a>
         </nav>
         
         <div class="logout-section">

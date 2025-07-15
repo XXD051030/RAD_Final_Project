@@ -248,7 +248,7 @@ if ($result->num_rows > 0) {
                     <span class="nav-icon"></span>
                     Dashboard
                 </a>
-                <a href="AdminDM.php" class="nav-item active">
+                <a href="AdminDM.php" class="nav-item">
                     <span class="nav-icon"></span>
                     Device Management
                 </a>
