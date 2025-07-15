@@ -1,74 +1,50 @@
 <?php
 session_start();
-include 'db_connect.php';
+include 'db_connect_safe.php';
+
+// Get database status
+$db_status = getDatabaseStatus();
+$conn = getSafeConnection();
 
 $error_message = '';
 
-// Check connection in db_connect.php
-if (!$conn) {
-    $error_message = "Database connection failed: " . mysqli_connect_error();
-}
-
-// Update password to hashed value if not already done (one-time fix)
-if ($_SERVER["REQUEST_METHOD"] != "POST" && empty($error_message)) {
-    $adminID = "admin123";
-    $plain_password = "123456";
-    $hashed_password = password_hash($plain_password, PASSWORD_DEFAULT);
-    $check_sql = "SELECT adminID FROM admin WHERE adminID = ?";
-    $check_stmt = $conn->prepare($check_sql);
-    $check_stmt->bind_param("s", $adminID);
-    $check_stmt->execute();
-    $check_result = $check_stmt->get_result();
-    if ($check_result->num_rows == 0) {
-        $insert_sql = "INSERT INTO admin (adminID, password) VALUES (?, ?)";
-        $insert_stmt = $conn->prepare($insert_sql);
-        $insert_stmt->bind_param("ss", $adminID, $hashed_password);
-        $insert_stmt->execute();
-        $insert_stmt->close();
-    } else {
-        $update_sql = "UPDATE admin SET password = ? WHERE adminID = ?";
-        $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("ss", $hashed_password, $adminID);
-        $update_stmt->execute();
-        $update_stmt->close();
-    }
-    $check_stmt->close();
-}
+// Admin user initialization is now handled by auto_setup.php
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $adminID = $_POST['adminID'];
-    $password = $_POST['password'];
+    // Check if database is ready before processing login
+    if (!$db_status['setup_required'] && $conn) {
+        $adminID = $_POST['adminID'];
+        $password = $_POST['password'];
 
-    // Prepare statement to fetch admin record
-    $sql = "SELECT adminID, password FROM admin WHERE adminID = ?";
-    $stmt = $conn->prepare($sql);
-    if ($stmt === false) {
-        $error_message = "Prepare failed: " . $conn->error;
-    } else {
-        $stmt->bind_param("s", $adminID);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        // Prepare statement to fetch admin record
+        $sql = "SELECT adminID, password FROM admin WHERE adminID = ?";
+        $stmt = $conn->prepare($sql);
+        if ($stmt !== false) {
+            $stmt->bind_param("s", $adminID);
+            $stmt->execute();
+            $result = $stmt->get_result();
 
-        if ($result && $result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            $hashed_password = $row['password'];
-            // Debugging: Log the retrieved hash and input password
-            error_log("Time: " . date('Y-m-d H:i:s') . " AdminID: $adminID, Hashed Password: $hashed_password, Input Password: $password");
+            if ($result && $result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $hashed_password = $row['password'];
 
-            // Check if password is correct
-            if (password_verify($password, $hashed_password)) {
-                $_SESSION['adminID'] = $adminID;
-                $_SESSION['logged_in'] = true;
-                header("Location: dashboard.php");
-                exit();
+                // Check if password is correct
+                if (password_verify($password, $hashed_password)) {
+                    $_SESSION['adminID'] = $adminID;
+                    $_SESSION['logged_in'] = true;
+                    header("Location: dashboard.php");
+                    exit();
+                } else {
+                    $error_message = "Invalid AdminID or Password!";
+                }
             } else {
-                $error_message = "Invalid AdminID or Password. (Verification failed: Hash: $hashed_password)";
+                $error_message = "Invalid AdminID or Password!";
             }
-        } else {
-            $error_message = "Invalid AdminID or Password. (No record found for AdminID: $adminID)";
-        }
 
-        $stmt->close();
+            $stmt->close();
+        }
+    } else {
+        $error_message = "Database is not ready. Please wait for automatic setup to complete.";
     }
 }
 
@@ -217,7 +193,7 @@ $conn->close();
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <?php if (!empty($error_message)): ?>
+            <?php if (!empty($error_message) && !$db_status['setup_required']): ?>
                 <div class="error-message"><?php echo $error_message; ?></div>
             <?php endif; ?>
             <button type="submit" class="login-btn" name="login">Login</button>
@@ -231,5 +207,41 @@ $conn->close();
             Don't have an Account? <a href="register.php">SignUp</a>
         </div>
     </div>
+
+    <script>
+        // Silent automatic database setup functionality for admin
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if setup is required and silently fix it
+            <?php if ($db_status['setup_required'] && $db_status['server_connected']): ?>
+                
+                // Start silent setup in background
+                startSilentDatabaseSetup();
+                
+            <?php endif; ?>
+        });
+
+        function startSilentDatabaseSetup() {
+            // Make AJAX request to auto_setup.php silently
+            fetch('auto_setup.php', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Setup completed successfully - silently reload page
+                    window.location.reload();
+                }
+                // If setup failed, just continue - admin can still try to login
+                // or the next page load will attempt setup again
+            })
+            .catch(error => {
+                // Silent failure - admin won't see any error messages
+                console.log('Silent setup attempt failed:', error);
+            });
+        }
+    </script>
 </body>
 </html>
