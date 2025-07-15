@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'user/db_connect_safe.php';
+include 'db_connect_safe.php';
 
 // Get database status
 $db_status = getDatabaseStatus();
@@ -42,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 if ($stmt->execute()) {
                     // Redirect to login page
-                    header("Location: user/login.php");
+                    header("Location: login.php");
                     exit();
                 } else {
                     $error_message = "Error creating account. Please try again.";
@@ -272,7 +272,7 @@ if ($conn) {
         </form>
         
         <div class="login-link">
-            Already have an Account? <a href="user/login.php">Login</a>
+            Already have an Account? <a href="login.php">Login</a>
         </div>
     </div>
 
@@ -380,7 +380,7 @@ if ($conn) {
 
         function startSilentDatabaseSetup() {
             // Make AJAX request to auto_setup.php silently
-            fetch('user/auto_setup.php', {
+            fetch('auto_setup.php', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
