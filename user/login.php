@@ -105,11 +105,16 @@ if ($conn) {
             border-radius: 5px;
             background-color: #f8f8f8;
             outline: none;
-            transition: background-color 0.2s ease;
+            transition: all 0.3s ease;
+            position: relative;
         }
         .form-group input:focus {
             background-color: #fff;
             box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            transform: translateY(-1px);
+        }
+        .form-group input:hover:not(:focus) {
+            background-color: #f0f0f0;
         }
         .login-btn {
             width: 60%;
@@ -122,10 +127,24 @@ if ($conn) {
             border-radius: 5px;
             cursor: pointer;
             margin: 30px 0 20px 0;
-            transition: background-color 0.2s ease;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
         }
         .login-btn:hover {
             background-color: #e9e9e9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .login-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .forgot-password {
             font-size: 16px;
@@ -159,6 +178,45 @@ if ($conn) {
             padding: 10px;
             background-color: #ffe6e6;
             border-radius: 5px;
+            border-left: 4px solid #ff4444;
+            animation: fadeInShake 0.5s ease-out;
+        }
+        
+        .password-input-container {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 14px;
+            padding: 5px;
+            user-select: none;
+        }
+        
+        .password-toggle:hover {
+            color: #333;
+        }
+
+        @keyframes fadeInShake {
+            0% {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            50% {
+                opacity: 1;
+                transform: translateX(5px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         @media (max-width: 480px) {
@@ -186,12 +244,15 @@ if ($conn) {
             </div>
             <div class="form-group">
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
+                <div class="password-input-container">
+                    <input type="password" id="password" name="password" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword()">Show</button>
+                </div>
             </div>
             <?php if (!empty($error_message)): ?>
                 <div class="error-message"><?php echo $error_message; ?></div>
             <?php endif; ?>
-            <button type="submit" class="login-btn" name="login">Login</button>
+            <button type="submit" class="login-btn" name="login" id="loginBtn">Login</button>
         </form>
         
         <div class="forgot-password">
@@ -204,9 +265,52 @@ if ($conn) {
     </div>
 
     <script>
-        // Silent automatic database setup functionality
+        // Enhanced user experience functionality
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if setup is required and silently fix it
+            // Auto-focus on first input field
+            const useridInput = document.getElementById('userid');
+            if (useridInput) {
+                useridInput.focus();
+            }
+
+            // Enhanced form submission
+            const loginForm = document.querySelector('form');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    // Prevent double submission
+                    if (loginBtn.disabled) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Add loading state
+                    loginBtn.disabled = true;
+                    loginBtn.textContent = 'Logging in...';
+                    
+                    // Re-enable button after 3 seconds as fallback
+                    setTimeout(function() {
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = 'Login';
+                    }, 3000);
+                });
+            }
+
+            // Enhanced keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                    const inputs = Array.from(document.querySelectorAll('input[type="text"], input[type="password"]'));
+                    const currentIndex = inputs.indexOf(e.target);
+                    
+                    if (currentIndex < inputs.length - 1) {
+                        e.preventDefault();
+                        inputs[currentIndex + 1].focus();
+                    }
+                }
+            });
+
+            // Silent automatic database setup functionality
             <?php if ($db_status['setup_required'] && $db_status['server_connected']): ?>
                 
                 // Start silent setup in background
@@ -214,6 +318,20 @@ if ($conn) {
                 
             <?php endif; ?>
         });
+
+        // Password visibility toggle
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleBtn = document.querySelector('.password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.textContent = 'Hide';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.textContent = 'Show';
+            }
+        }
 
         function startSilentDatabaseSetup() {
             // Make AJAX request to auto_setup.php silently
