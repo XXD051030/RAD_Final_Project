@@ -236,14 +236,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="sidebar">
             <div class="profile-section">
                 <div class="profile-image">👤</div>
+                <p>Welcome, <?php echo htmlspecialchars($_SESSION['userid']); ?>!</p>
             </div>
 
             <nav class="nav-menu">
-                <a href="dashboard.php" class="nav-item active">
+                <a href="dashboard.php" class="nav-item">
                     <span class="nav-icon"></span>
                     Dashboard
                 </a>
-                <a href="../View.php" class="nav-item">
+                <a href="../View.php" class="nav-item active">
                     <span class="nav-icon"></span>
                     View
                 </a>

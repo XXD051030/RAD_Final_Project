@@ -209,10 +209,11 @@ $conn->close();
         <div class="sidebar">
             <div class="profile-section">
                 <div class="profile-image">👤</div>
+                <p>Welcome, <?php echo htmlspecialchars($_SESSION['userid']); ?>!</p>
             </div>
             
             <nav class="nav-menu">
-                <a href="dashboard.php" class="nav-item active">
+                <a href="dashboard.php" class="nav-item">
                     <span class="nav-icon"></span>
                     Dashboard
                 </a>
@@ -220,7 +221,7 @@ $conn->close();
                     <span class="nav-icon"></span>
                     View
                 </a>
-                <a href="alert.php" class="nav-item">
+                <a href="alert.php" class="nav-item active">
                     <span class="nav-icon"></span>
                     Alert
                 </a>

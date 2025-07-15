@@ -128,7 +128,7 @@ $conn->close();
         }
 
         /* Main Content Styles */
-       .main-content {
+        .main-content {
             margin-left: 240px;
             flex: 1;
             padding: 30px;
@@ -142,45 +142,76 @@ $conn->close();
         }
 
         /* Asset Section */
-       .asset-section {
+        .asset-section {
             background: white;
             border: 2px solid #333;
             border-radius: 8px;
             overflow: hidden;
-            padding: 20px;
         }
 
-       .asset-buttons {
+        .asset-header {
+            background: white;
+            padding: 20px 25px;
+            border-bottom: 2px solid #333;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            justify-content: space-between;
+            align-items: center;
         }
 
-       .asset-button {
-            padding: 8px 16px;
-            background-color: #f0f0f0;
+        .asset-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .asset-button {
+            padding: 10px 18px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.2s ease;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-       .asset-button:hover {
-            background-color: #e0e0e0;
+        .asset-button.track {
+            background-color: #4a90e2;
+            color: white;
         }
 
-       .asset-table-container {
+        .asset-button.track:hover {
+            background-color: #357abd;
+            transform: translateY(-1px);
+        }
+
+        .asset-button.borrow {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .asset-button.borrow:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+
+        .asset-table-container {
             overflow-x: auto;
         }
 
-       .asset-table {
+        .asset-table {
             width: 100%;
             border-collapse: collapse;
         }
 
-       .asset-table th {
+        .asset-table th {
             background-color: #f8f9fa;
-            padding: 12px 15px;
+            padding: 15px 25px;
             text-align: left;
             font-weight: 600;
             color: #333;
@@ -188,16 +219,58 @@ $conn->close();
             font-size: 16px;
         }
 
-       .asset-table td {
-            padding: 12px 15px;
+        .asset-table td {
+            padding: 15px 25px;
             border-bottom: 1px solid #dee2e6;
             color: #333;
         }
 
-       .asset-table tr:nth-child(even) {
-            background-color: #f9f9f9;
+        .asset-table tr {
+            background-color: #e3f2fd;
+            transition: background-color 0.2s ease;
         }
 
+        .asset-table tr:hover {
+            background-color: #bbdefb;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-subtext {
+            font-size: 14px;
+            opacity: 0.7;
+        }
 
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -235,14 +308,15 @@ $conn->close();
         <div class="sidebar">
             <div class="profile-section">
                 <div class="profile-image">👤</div>
+                <p>Welcome, <?php echo htmlspecialchars($_SESSION['userid']); ?>!</p>
             </div>
             
             <nav class="nav-menu">
-                <a href="../user/dashboard/dashboard.php" class="nav-item active">
+                <a href="../user/dashboard/dashboard.php" class="nav-item">
                     <span class="nav-icon"></span>
                     Dashboard
                 </a>
-                <a href="View.php" class="nav-item">
+                <a href="View.php" class="nav-item active">
                     <span class="nav-icon"></span>
                     View
                 </a>
@@ -259,13 +333,20 @@ $conn->close();
 
         <!-- Main Content -->
         <div class="main-content">
-            <h1 class="dashboard-header">User Dashboard</h1>
+            <h1 class="dashboard-header">View</h1>
             
             <!-- Asset Section -->
             <div class="asset-section">
-                <div class="asset-buttons">
-                    <a href="../user/dashboard/package.php" class="asset-button">Track Asset</a>
-                    <a href="../user/dashboard/borrow.php" class="asset-button">Borrow Asset</a>
+                <div class="asset-header">
+                    <span>Assets</span>
+                    <div class="asset-buttons">
+                        <a href="../user/dashboard/package.php" class="asset-button track">
+                            📦 Track Asset
+                        </a>
+                        <a href="../user/dashboard/borrow.php" class="asset-button borrow">
+                            ➕ Borrow Asset
+                        </a>
+                    </div>
                 </div>
                 <div class="asset-table-container">
                     <table class="asset-table">
@@ -287,11 +368,11 @@ $conn->close();
                                     echo "<td>" . htmlspecialchars($row['Serial_Number']) . "</td>";
                                     echo "<td>" . (new DateTime($row['Purchase_Date']))->format('d/m/Y') . "</td>";
                                     echo "<td>" . (new DateTime($row['Warranty_Expiry']))->format('d/m/Y') . "</td>";
-                                    echo "<td>" . htmlspecialchars($row['Status']) . "</td>";
+                                    echo "<td><span class='status-badge status-active'>" . htmlspecialchars($row['Status']) . "</span></td>";
                                     echo "</tr>";
                                 }
                             } else {
-                                echo "<tr><td colspan='5'>No assets found</td></tr>";
+                                echo "<tr><td colspan='5' class='empty-state'><div class='empty-state-icon'>⚠️</div><div class='empty-state-text'>No assets found</div><div class='empty-state-subtext'>Please check back later or add new assets.</div></td></tr>";
                             }
                             ?>
                         </tbody>

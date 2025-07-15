@@ -279,6 +279,7 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
         <div class="sidebar">
             <div class="profile-section">
                 <div class="profile-image">👤</div>
+                <p>Welcome, <?php echo htmlspecialchars($_SESSION['userid']); ?>!</p>
             </div>
 
             <nav class="nav-menu">
