@@ -340,9 +340,6 @@ $conn->close();
                 <div class="asset-header">
                     <span>Assets</span>
                     <div class="asset-buttons">
-                        <a href="../user/dashboard/package.php" class="asset-button track">
-                            📦 Track Asset
-                        </a>
                         <a href="../user/dashboard/borrow.php" class="asset-button borrow">
                             ➕ Borrow Asset
                         </a>
