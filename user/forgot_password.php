@@ -170,10 +170,12 @@ $conn->close();
             <div class="form-group">
                 <label for="new_password">Create New Password:</label>
                 <input type="password" id="new_password" name="new_password" required>
+                <button type="button" class="password-toggle" onclick="togglePassword()">Show</button>
             </div>
             <div class="form-group">
                 <label for="confirm_password">Confirm Password:</label>
                 <input type="password" id="confirm_password" name="confirm_password" required>
+                <button type="button" class="password-toggle" onclick="togglePassword()">Show</button>
             </div>
             <?php if (!empty($error)): ?>
                 <div class="error-message"><?php echo $error; ?></div>
