@@ -16,7 +16,7 @@ if (!isset($_SESSION['adminID']) || !isset($_SESSION['admin_logged_in']) || $_SE
 // Handle delete
 if (isset($_GET['id'])) {
     $id = $_GET['id']; // Using string ID (e.g., 'A001')
-    $stmt = $conn->prepare("DELETE FROM assets WHERE asset_id = ?");
+    $stmt = $conn->prepare("DELETE FROM assets WHERE Asset_ID = ?");
     if ($stmt === false) {
         error_log("Prepare failed: " . $conn->error);
         die("Prepare failed: " . $conn->error);
@@ -315,20 +315,20 @@ if (!empty($assets)) {
             </tr>
             <?php foreach ($assets as $device): ?>
             <tr>
-                <td><?= htmlspecialchars($device['asset_id'] ?? 'N/A') ?></td>
-                <td><?= htmlspecialchars($device['asset_name'] ?? 'N/A') ?></td>
-                <td><?= htmlspecialchars($device['category'] ?? 'N/A') ?></td>
-                <td><?= htmlspecialchars($device['brand_model'] ?? 'N/A') ?></td>
-                <td><?= htmlspecialchars($device['serial_number'] ?? 'N/A') ?></td>
-                <td><?= htmlspecialchars($device['location'] ?? 'N/A') ?></td>
-                <td><?= htmlspecialchars($device['assigned_to'] ?? 'N/A') ?></td>
-                <td><?= htmlspecialchars($device['purchase_date'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($device['Asset_ID'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($device['Asset_Name'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($device['Category'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($device['Brand_Model'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($device['Serial_Number'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($device['Location'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($device['Assigned_To'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($device['Purchase_Date'] ?? 'N/A') ?></td>
                 <td><?= htmlspecialchars($device['Warranty_Expiry'] ?? 'N/A') ?></td>
-                <td><?= htmlspecialchars($device['asset_value'] ?? 'N/A') ?></td>
-                <td><?= htmlspecialchars($device['status'] ?? 'N/A') ?></td>
-                <td><?= htmlspecialchars($device['supplier'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($device['Asset_Value'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($device['Status'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($device['Supplier'] ?? 'N/A') ?></td>
                 <td>
-                    <a href="delete-asset.php?id=<?= htmlspecialchars($device['asset_id'] ?? '') ?>" onclick="return confirm('Are you sure?')">
+                    <a href="delete-asset.php?id=<?= htmlspecialchars($device['Asset_ID'] ?? '') ?>" onclick="return confirm('Are you sure?')">
                         <button class="action-btn delete-btn">Delete</button>
                     </a>
                 </td>

@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = trim($_POST['status']);
     $supplier = trim($_POST['supplier']);
 
-    $stmt = $conn->prepare("INSERT INTO assets (asset_id, asset_name, category, serial_number, brand_model, location, assigned_to, purchase_date, Warranty_Expiry, asset_value, status, supplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO assets (Asset_ID, Asset_Name, Category, Serial_Number, Brand_Model, Location, Assigned_To, Purchase_Date, Warranty_Expiry, Asset_Value, Status, Supplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("sssssssssdss", $asset_id, $asset_name, $category, $serial_number, $brand_model, $location, $assigned_to, $purchase_date, $Warranty_Expiry, $asset_value, $status, $supplier);
     if ($stmt->execute()) {
         header("Location: AdminDM.php?added=1");

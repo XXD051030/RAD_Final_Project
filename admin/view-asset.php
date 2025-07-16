@@ -17,13 +17,13 @@ $assets = [];
 $search = $_GET['search'] ?? '';
 
 if ($search) {
-    $stmt = $conn->prepare("SELECT asset_id, asset_name, category, brand_model, serial_number, location, assigned_to, purchase_date, Warranty_Expiry, asset_value, status, supplier FROM assets WHERE asset_name LIKE ? OR category LIKE ? OR serial_number LIKE ?");
+    $stmt = $conn->prepare("SELECT Asset_ID, Asset_Name, Category, Brand_Model, Serial_Number, Location, Assigned_To, Purchase_Date, Warranty_Expiry, Asset_Value, Status, Supplier FROM assets WHERE Asset_Name LIKE ? OR Category LIKE ? OR Serial_Number LIKE ?");
     $like = "%" . $search . "%";
     $stmt->bind_param("sss", $like, $like, $like);
     $stmt->execute();
     $result = $stmt->get_result();
 } else {
-    $result = $conn->query("SELECT asset_id, asset_name, category, brand_model, serial_number, location, assigned_to, purchase_date, Warranty_Expiry, asset_value, status, supplier FROM assets");
+    $result = $conn->query("SELECT Asset_ID, Asset_Name, Category, Brand_Model, Serial_Number, Location, Assigned_To, Purchase_Date, Warranty_Expiry, Asset_Value, Status, Supplier FROM assets");
 }
 
 while ($row = $result->fetch_assoc()) {
@@ -348,23 +348,23 @@ $conn->close();
             </tr>
             <?php foreach ($assets as $device): ?>
             <tr>
-                <td><?= htmlspecialchars($device['asset_id']) ?></td>
-                <td><?= htmlspecialchars($device['asset_name']) ?></td>
-                <td><?= htmlspecialchars($device['category']) ?></td>
-                <td><?= htmlspecialchars($device['brand_model']) ?></td>
-                <td><?= htmlspecialchars($device['serial_number']) ?></td>
-                <td><?= htmlspecialchars($device['location']) ?></td>
-                <td><?= htmlspecialchars($device['assigned_to']) ?></td>
-                <td><?= htmlspecialchars($device['purchase_date']) ?></td>
+                <td><?= htmlspecialchars($device['Asset_ID']) ?></td>
+                <td><?= htmlspecialchars($device['Asset_Name']) ?></td>
+                <td><?= htmlspecialchars($device['Category']) ?></td>
+                <td><?= htmlspecialchars($device['Brand_Model']) ?></td>
+                <td><?= htmlspecialchars($device['Serial_Number']) ?></td>
+                <td><?= htmlspecialchars($device['Location']) ?></td>
+                <td><?= htmlspecialchars($device['Assigned_To']) ?></td>
+                <td><?= htmlspecialchars($device['Purchase_Date']) ?></td>
                 <td><?= htmlspecialchars($device['Warranty_Expiry']) ?></td>
-                <td><?= htmlspecialchars($device['asset_value']) ?></td>
-                <td><?= htmlspecialchars($device['status']) ?></td>
-                <td><?= htmlspecialchars($device['supplier']) ?></td>
+                <td><?= htmlspecialchars($device['Asset_Value']) ?></td>
+                <td><?= htmlspecialchars($device['Status']) ?></td>
+                <td><?= htmlspecialchars($device['Supplier']) ?></td>
                 <td>
-                    <a href="update-asset.php?id=<?= $device['asset_id'] ?>">
+                    <a href="update-asset.php?id=<?= $device['Asset_ID'] ?>">
                         <button class="action-btn edit-btn">Edit</button>
                     </a>
-                    <a href="delete-asset.php?id=<?= $device['asset_id'] ?>" onclick="return confirm('Are you sure you want to delete this asset?');">
+                    <a href="delete-asset.php?id=<?= $device['Asset_ID'] ?>" onclick="return confirm('Are you sure you want to delete this asset?');">
                         <button class="action-btn delete-btn">Delete</button>
                     </a>
                 </td>

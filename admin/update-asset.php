@@ -22,7 +22,7 @@ if (!$id) {
 
 // Fetch asset from DB (GET request only)
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $stmt = $conn->prepare("SELECT * FROM assets WHERE asset_id = ?");
+    $stmt = $conn->prepare("SELECT * FROM assets WHERE Asset_ID = ?");
     $stmt->bind_param("s", $id); // Change to string
     $stmt->execute();
     $result = $stmt->get_result();
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = trim($_POST['status']);
     $supplier = trim($_POST['supplier']);
 
-    $stmt = $conn->prepare("UPDATE assets SET asset_name=?, category=?, serial_number=?, brand_model=?, location=?, assigned_to=?, purchase_date=?, Warranty_Expiry=?, asset_value=?, status=?, supplier=? WHERE asset_id=?");
+    $stmt = $conn->prepare("UPDATE assets SET Asset_Name=?, Category=?, Serial_Number=?, Brand_Model=?, Location=?, Assigned_To=?, Purchase_Date=?, Warranty_Expiry=?, Asset_Value=?, Status=?, Supplier=? WHERE Asset_ID=?");
     $stmt->bind_param("sssssssssdss", $asset_name, $category, $serial_number, $brand_model, $location, $assigned_to, $purchase_date, $Warranty_Expiry, $asset_value, $status, $supplier, $id); // Change last param to string
     if ($stmt->execute()) {
         header("Location: AdminDM.php?updated=1");
@@ -300,17 +300,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
     <form method="post">
         <input type="hidden" name="id" value="<?= htmlspecialchars($id) ?>">
-        <label>Asset Name: <input type="text" name="asset_name" value="<?= htmlspecialchars($asset['asset_name'] ?? '') ?>" required></label><br>
-        <label>Category: <input type="text" name="category" value="<?= htmlspecialchars($asset['category'] ?? '') ?>" required></label><br>
-        <label>Serial Number: <input type="text" name="serial_number" value="<?= htmlspecialchars($asset['serial_number'] ?? '') ?>" required></label><br>
-        <label>Brand Model: <input type="text" name="brand_model" value="<?= htmlspecialchars($asset['brand_model'] ?? '') ?>"></label><br>
-        <label>Location: <input type="text" name="location" value="<?= htmlspecialchars($asset['location'] ?? '') ?>"></label><br>
-        <label>Assigned To: <input type="text" name="assigned_to" value="<?= htmlspecialchars($asset['assigned_to'] ?? '') ?>"></label><br>
-        <label>Purchase Date: <input type="date" name="purchase_date" value="<?= htmlspecialchars($asset['purchase_date'] ?? '') ?>"></label><br>
+        <label>Asset Name: <input type="text" name="asset_name" value="<?= htmlspecialchars($asset['Asset_Name'] ?? '') ?>" required></label><br>
+        <label>Category: <input type="text" name="category" value="<?= htmlspecialchars($asset['Category'] ?? '') ?>" required></label><br>
+        <label>Serial Number: <input type="text" name="serial_number" value="<?= htmlspecialchars($asset['Serial_Number'] ?? '') ?>" required></label><br>
+        <label>Brand Model: <input type="text" name="brand_model" value="<?= htmlspecialchars($asset['Brand_Model'] ?? '') ?>"></label><br>
+        <label>Location: <input type="text" name="location" value="<?= htmlspecialchars($asset['Location'] ?? '') ?>"></label><br>
+        <label>Assigned To: <input type="text" name="assigned_to" value="<?= htmlspecialchars($asset['Assigned_To'] ?? '') ?>"></label><br>
+        <label>Purchase Date: <input type="date" name="purchase_date" value="<?= htmlspecialchars($asset['Purchase_Date'] ?? '') ?>"></label><br>
         <label>Warranty Expiry: <input type="date" name="Warranty_Expiry" value="<?= htmlspecialchars($asset['Warranty_Expiry'] ?? '') ?>"></label><br>
-        <label>Asset Value: <input type="number" step="0.01" name="asset_value" value="<?= htmlspecialchars($asset['asset_value'] ?? '') ?>"></label><br>
-        <label>Status: <input type="text" name="status" value="<?= htmlspecialchars($asset['status'] ?? '') ?>"></label><br>
-        <label>Supplier: <input type="text" name="supplier" value="<?= htmlspecialchars($asset['supplier'] ?? '') ?>"></label><br>
+        <label>Asset Value: <input type="number" step="0.01" name="asset_value" value="<?= htmlspecialchars($asset['Asset_Value'] ?? '') ?>"></label><br>
+        <label>Status: <input type="text" name="status" value="<?= htmlspecialchars($asset['Status'] ?? '') ?>"></label><br>
+        <label>Supplier: <input type="text" name="supplier" value="<?= htmlspecialchars($asset['Supplier'] ?? '') ?>"></label><br>
                 <div class="form-actions">
                     <button class="cancel" type="reset">Cancel</button>
                     <button class="add" type="submit">Update</button>
