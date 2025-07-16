@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Check if password is correct
                 if (password_verify($password, $hashed_password)) {
                     $_SESSION['adminID'] = $adminID;
-                    $_SESSION['logged_in'] = true;
+                    $_SESSION['admin_logged_in'] = true;
                     header("Location: dashboard.php");
                     exit();
                 } else {

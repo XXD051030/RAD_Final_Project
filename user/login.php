@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Verify hashed password
             if (password_verify($password, $row['password'])) {
                 $_SESSION['userid'] = $userid;
-                $_SESSION['logged_in'] = true;
+                $_SESSION['user_logged_in'] = true;
                 header("Location: dashboard/dashboard.php");
                 exit();
             } else {

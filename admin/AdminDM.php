@@ -6,7 +6,7 @@ if ($conn->connect_error) {
 }
 
 // Session check
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+if (!isset($_SESSION['adminID']) || !isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header('Location: login.php');
     exit();
 }
