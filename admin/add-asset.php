@@ -12,7 +12,7 @@ if (!isset($_SESSION['adminID']) || !isset($_SESSION['admin_logged_in']) || $_SE
     header('Location: login.php');
     exit();
 }
-
+ 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $asset_id = trim($_POST['asset_id']);
