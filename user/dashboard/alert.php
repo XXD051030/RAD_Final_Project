@@ -7,23 +7,32 @@ if (!isset($_SESSION['userid']) || !isset($_SESSION['user_logged_in']) || !$_SES
 
 include '../db_connect.php';
 
-// Calculate date three months from now
-$current_date = new DateTime('now', new DateTimeZone('Asia/Singapore')); // Adjust timezone as needed
-$three_months_later = clone $current_date;
-$three_months_later->modify('+12 months');
-$three_months_count = 0;
+// Calculate date six months from now - 计算从现在起六个月的日期
+$current_date = new DateTime('now', new DateTimeZone('Asia/Singapore'));
+$six_months_later = clone $current_date;
+$six_months_later->modify('+6 months'); // Changed from +12 months to +6 months
 
 $current_date_str = $current_date->format('Y-m-d');
-$three_months_later_str = $three_months_later->format('Y-m-d');
+$six_months_later_str = $six_months_later->format('Y-m-d');
 
-$sql = "SELECT COUNT(*) as count FROM assets WHERE Warranty_Expiry BETWEEN ? AND ? AND Status = 'Active'";
+// Get detailed device information instead of just count - 获取详细设备信息而不只是计数
+$devices_nearing_expiry = [];
+$sql = "SELECT Asset_Name, Serial_Number, Warranty_Expiry FROM assets WHERE Warranty_Expiry BETWEEN ? AND ? AND Status = 'Active' ORDER BY Warranty_Expiry ASC";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("ss", $current_date_str, $three_months_later_str);
+$stmt->bind_param("ss", $current_date_str, $six_months_later_str);
 $stmt->execute();
 $result = $stmt->get_result();
-if ($row = $result->fetch_assoc()) {
-    $three_months_count = $row['count'];
+
+while ($row = $result->fetch_assoc()) {
+    // Calculate days remaining - 计算剩余天数
+    $warranty_date = new DateTime($row['Warranty_Expiry']);
+    $days_remaining = $current_date->diff($warranty_date)->days;
+    
+    $row['days_remaining'] = $days_remaining;
+    $devices_nearing_expiry[] = $row;
 }
+
+$three_months_count = count($devices_nearing_expiry); // Update variable name for consistency
 
 $stmt->close();
 $conn->close();
@@ -176,13 +185,99 @@ $conn->close();
             left: 10px;
             top: 10px;
             font-size: 24px;
-            color: #f0ad4e; /* Yellow color for warning icon */
+            color: #f0ad4e;
         }
 
         .alert-message {
             margin-left: 40px;
             font-size: 16px;
             line-height: 1.4;
+        }
+
+        /* New styles for device details table - 设备详情表格的新样式 */
+        .warranty-section {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .warranty-header {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .warranty-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .devices-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .devices-table th,
+        .devices-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .devices-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .devices-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .activity-section {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .activity-header {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .activity-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .activity-table th,
+        .activity-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .activity-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .no-activity {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
         }
 
         /* Responsive Design */
@@ -199,6 +294,11 @@ $conn->close();
             .main-content {
                 margin-left: 0;
                 padding: 20px;
+            }
+
+            .devices-table,
+            .activity-table {
+                font-size: 14px;
             }
         }
     </style>
@@ -238,8 +338,59 @@ $conn->close();
                 <h2 class="alert-header">User Alerts</h2>
                 <div class="alert-content">
                     <i class="fas fa-exclamation-triangle alert-icon"></i>
-                    <p class="alert-message">There <?php echo $three_months_count == 1 ? 'is' : 'are'; ?> <?php echo $three_months_count; ?> device<?php echo $three_months_count != 1 ? 's' : ''; ?> nearing warranty expiry within three months. Please expand your warranty.</p>
+                    <p class="alert-message">There <?php echo $three_months_count == 1 ? 'is' : 'are'; ?> <?php echo $three_months_count; ?> device<?php echo $three_months_count != 1 ? 's' : ''; ?> nearing warranty expiry within six months. Please expand your warranty.</p>
                 </div>
+            </div>
+
+            <!-- New Warranty Alerts Section - 新的保修警报部分 -->
+            <div class="warranty-section">
+                <div class="warranty-header">
+                    <div class="warranty-title">Devices with Warranty Ending in 6 Months</div>
+                </div>
+                
+                <?php if (count($devices_nearing_expiry) > 0): ?>
+                    <table class="devices-table">
+                        <thead>
+                            <tr>
+                                <th>Device Name</th>
+                                <th>Serial Number</th>
+                                <th>Warranty End Date</th>
+                                <th>Days Left</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($devices_nearing_expiry as $device): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($device['Asset_Name']); ?></td>
+                                    <td><?php echo htmlspecialchars($device['Serial_Number']); ?></td>
+                                    <td><?php echo htmlspecialchars($device['Warranty_Expiry']); ?></td>
+                                    <td><?php echo $device['days_remaining']; ?> day(s)</td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p style="text-align: center; color: #666; padding: 20px;">No devices with warranty ending in the next 6 months.</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Recent Activity Log Section - 最近活动日志部分 -->
+            <div class="activity-section">
+                <h3 class="activity-header">Recent Activity Log</h3>
+                <table class="activity-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Serial Number</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3" class="no-activity">No recent activity.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
