@@ -209,6 +209,81 @@ if ($conn) {
             color: #333;
         }
 
+        /* Real-time validation styles */
+        .password-hint {
+            font-size: 14px;
+            margin-top: 5px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .password-hint.invalid {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .password-hint.valid {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .password-hint.neutral {
+            color: #6c757d;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+        
+        /* Hidden state for initial load */
+        .password-hint.hidden {
+            display: none;
+        }
+
+        .validation-icon.hidden {
+            display: none;
+        }
+        
+        .input-valid {
+            border: 2px solid #28a745 !important;
+            background-color: #f8fff9 !important;
+        }
+        
+        .input-invalid {
+            border: 2px solid #dc3545 !important;
+            background-color: #fff8f8 !important;
+        }
+        
+        .input-neutral {
+            border: 1px solid #e9ecef;
+        }
+        
+        .signup-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            background-color: #e9ecef !important;
+        }
+        
+        .validation-icon {
+            position: absolute;
+            right: 65px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .validation-icon.valid {
+            color: #28a745;
+        }
+        
+        .validation-icon.invalid {
+            color: #dc3545;
+        }
+
         @keyframes fadeInShake {
             0% {
                 opacity: 0;
@@ -255,14 +330,22 @@ if ($conn) {
                 <label for="password">Password:</label>
                 <div class="password-input-container">
                     <input type="password" id="password" name="password" required>
+                    <span class="validation-icon hidden" id="passwordIcon"></span>
                     <button type="button" class="password-toggle" onclick="togglePassword('password', this)">Show</button>
+                </div>
+                <div class="password-hint hidden" id="passwordHint">
+                    Enter at least 6 characters
                 </div>
             </div>
             <div class="form-group">
                 <label for="confirmPassword">Confirm Password:</label>
                 <div class="password-input-container">
                     <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <span class="validation-icon hidden" id="confirmPasswordIcon"></span>
                     <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword', this)">Show</button>
+                </div>
+                <div class="password-hint hidden" id="confirmPasswordHint">
+                    Confirm your password
                 </div>
             </div>
             <?php if (!empty($error_message)): ?>
@@ -285,9 +368,104 @@ if ($conn) {
                 useridInput.focus();
             }
 
+            // Real-time password validation
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const passwordHint = document.getElementById('passwordHint');
+            const confirmPasswordHint = document.getElementById('confirmPasswordHint');
+            const passwordIcon = document.getElementById('passwordIcon');
+            const confirmPasswordIcon = document.getElementById('confirmPasswordIcon');
+            const signupBtn = document.getElementById('signupBtn');
+
+            // Real-time password validation
+            passwordInput.addEventListener('input', function() {
+                validatePassword();
+                validateConfirmPassword();
+                updateSubmitButton();
+            });
+
+            confirmPasswordInput.addEventListener('input', function() {
+                validateConfirmPassword();
+                updateSubmitButton();
+            });
+
+            function validatePassword() {
+                const password = passwordInput.value;
+                const length = password.length;
+                
+                if (length === 0) {
+                    // Hide hint and icon when no input
+                    passwordHint.className = 'password-hint hidden';
+                    passwordInput.className = 'input-neutral';
+                    passwordIcon.className = 'validation-icon hidden';
+                    passwordIcon.textContent = '';
+                } else if (length < 6) {
+                    passwordHint.textContent = `Current: ${length}/6 characters (Need ${6 - length} more)`;
+                    passwordHint.className = 'password-hint invalid';
+                    passwordInput.className = 'input-invalid';
+                    passwordIcon.textContent = '✗';
+                    passwordIcon.className = 'validation-icon invalid';
+                } else {
+                    passwordHint.textContent = `✓ Password length is valid (${length} characters)`;
+                    passwordHint.className = 'password-hint valid';
+                    passwordInput.className = 'input-valid';
+                    passwordIcon.textContent = '✓';
+                    passwordIcon.className = 'validation-icon valid';
+                }
+            }
+
+            function validateConfirmPassword() {
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+                
+                if (confirmPassword.length === 0) {
+                    // Hide hint and icon when no input
+                    confirmPasswordHint.className = 'password-hint hidden';
+                    confirmPasswordInput.className = 'input-neutral';
+                    confirmPasswordIcon.className = 'validation-icon hidden';
+                    confirmPasswordIcon.textContent = '';
+                } else if (password !== confirmPassword) {
+                    confirmPasswordHint.textContent = '✗ Passwords do not match';
+                    confirmPasswordHint.className = 'password-hint invalid';
+                    confirmPasswordInput.className = 'input-invalid';
+                    confirmPasswordIcon.textContent = '✗';
+                    confirmPasswordIcon.className = 'validation-icon invalid';
+                } else if (password.length >= 6) {
+                    confirmPasswordHint.textContent = '✓ Passwords match';
+                    confirmPasswordHint.className = 'password-hint valid';
+                    confirmPasswordInput.className = 'input-valid';
+                    confirmPasswordIcon.textContent = '✓';
+                    confirmPasswordIcon.className = 'validation-icon valid';
+                } else {
+                    confirmPasswordHint.textContent = 'Wait for valid password first';
+                    confirmPasswordHint.className = 'password-hint neutral';
+                    confirmPasswordInput.className = 'input-neutral';
+                    confirmPasswordIcon.className = 'validation-icon hidden';
+                    confirmPasswordIcon.textContent = '';
+                }
+            }
+
+            function updateSubmitButton() {
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+                const userID = document.getElementById('userID').value;
+                const email = document.getElementById('email').value;
+                
+                const isPasswordValid = password.length >= 6;
+                const isConfirmPasswordValid = confirmPassword === password && password.length >= 6;
+                const isFormComplete = userID.trim() !== '' && email.trim() !== '';
+                
+                if (isPasswordValid && isConfirmPasswordValid && isFormComplete) {
+                    signupBtn.disabled = false;
+                    signupBtn.style.opacity = '1';
+                } else {
+                    signupBtn.disabled = true;
+                    signupBtn.style.opacity = '0.4';
+                }
+            }
+
             // Enhanced form submission
             const signupForm = document.getElementById('signupForm');
-            const signupBtn = document.getElementById('signupBtn');
             
             if (signupForm) {
                 signupForm.addEventListener('submit', function(e) {
@@ -324,6 +502,10 @@ if ($conn) {
                     }, 3000);
                 });
             }
+
+            // Update submit button when other fields change
+            document.getElementById('userID').addEventListener('input', updateSubmitButton);
+            document.getElementById('email').addEventListener('input', updateSubmitButton);
 
             // Enhanced keyboard navigation
             document.addEventListener('keydown', function(e) {

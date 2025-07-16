@@ -6,7 +6,11 @@ A comprehensive web-based system for managing assets and resources with automati
 
 - **Automatic Database Setup**: No manual configuration required - the system automatically creates and configures the database
 - **Dual Portal System**: Separate user and admin interfaces
-- **User Authentication**: Secure login system with password hashing for both portals
+- **Enhanced User Authentication**: 
+  - Secure login system with password hashing for both portals
+  - Real-time password validation with live character count
+  - Visual feedback for password strength and confirmation matching
+  - Smart form validation prevents submission until all requirements are met
 - **Asset Management**: Track and manage organizational assets
 - **Responsive Design**: Modern, mobile-friendly interface
 - **Real-time Status Updates**: Live feedback during system initialization
@@ -119,9 +123,14 @@ rad-final/
 ## 🔒 Security Features
 
 - **Password Hashing**: All passwords are securely hashed using PHP's `password_hash()`
+- **Real-time Password Validation**: 
+  - Minimum 6 characters requirement with live character count
+  - Visual feedback with color-coded input fields and validation icons
+  - Real-time password confirmation matching
+  - Disabled submit button until all validation passes
 - **SQL Injection Protection**: Prepared statements used throughout
 - **Session Management**: Secure session handling for user authentication
-- **Input Validation**: Form inputs are validated and sanitized
+- **Input Validation**: Form inputs are validated and sanitized both client-side and server-side
 - **Separation of Concerns**: User and admin portals are completely separate
 
 ## 📊 Database Schema
