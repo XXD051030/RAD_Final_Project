@@ -96,6 +96,7 @@ $conn->close();
             width: 100%;
             text-align: left;
             font-size: 16px;
+            white-space: nowrap;
         }
 
         .nav-item:hover {
@@ -134,14 +135,7 @@ $conn->close();
         .logout-btn:hover {
             background-color: #c9302c;
         }
-        a {
-            color: white;
-            text-decoration: none;
-            transition: color 0.5s ease;
-        }
-        a:hover {
-            color: red; 
-        }
+        /* Remove global link styles that interfere with navigation */
         /*content*/
         .content {
             margin-left: 220px;

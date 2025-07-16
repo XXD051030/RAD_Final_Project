@@ -108,6 +108,7 @@ if ($columnExists) {
             width: 100%;
             text-align: left;
             font-size: 16px;
+            white-space: nowrap;
         }
 
         .nav-item:hover {
@@ -146,14 +147,7 @@ if ($columnExists) {
         .logout-btn:hover {
             background-color: #c9302c;
         }
-        a {
-            color: white;
-            text-decoration: none;
-            transition: color 0.5s ease;
-        }
-        a:hover {
-            color: red; 
-        }
+        /* Remove global link styles that interfere with navigation */
 
         .profile-section {
             padding: 30px 20px;
@@ -178,19 +172,7 @@ if ($columnExists) {
             padding: 20px 0;
         }
 
-        .nav-item {
-            padding: 15px 30px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .nav-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .nav-item.active {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
+        /* Duplicate nav-item styles removed to prevent conflicts */
 
         .logout-section {
             padding: 20px;

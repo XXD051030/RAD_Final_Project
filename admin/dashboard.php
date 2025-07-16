@@ -111,6 +111,7 @@ if ($result->num_rows > 0) {
             width: 100%;
             text-align: left;
             font-size: 16px;
+            white-space: nowrap;
         }
         .nav-item:hover {
             background-color: rgba(255, 255, 255, 0.1);

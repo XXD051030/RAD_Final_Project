@@ -95,6 +95,7 @@ $conn->close();
             width: 100%;
             text-align: left;
             font-size: 16px;
+            white-space: nowrap;
         }
 
         .nav-item:hover {
