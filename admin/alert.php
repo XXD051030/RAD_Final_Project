@@ -52,10 +52,14 @@ if ($columnExists) {
     <meta charset="UTF-8">
     <title>Alert Page</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: Arial, sans-serif;
             background-color: #f5f5f5;
-            margin: 0;
         }
         
 
@@ -67,6 +71,8 @@ if ($columnExists) {
             display: flex;
             flex-direction: column;
             position: fixed;
+            left: 0;
+            top: 0;
             height: 100vh;
             z-index: 1000;
         }

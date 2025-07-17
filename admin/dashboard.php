@@ -74,6 +74,8 @@ if ($result->num_rows > 0) {
             display: flex;
             flex-direction: column;
             position: fixed;
+            left: 0;
+            top: 0;
             height: 100vh;
             z-index: 1000;
         }

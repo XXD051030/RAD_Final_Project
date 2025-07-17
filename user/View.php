@@ -8,7 +8,7 @@ if (!isset($_SESSION['userid']) || !isset($_SESSION['user_logged_in']) || !$_SES
 include 'db_connect.php';
 
 // Query to get all assets
-$sql = "SELECT Asset_Name, Serial_Number, Purchase_Date, Warranty_Expiry, Status FROM assets WHERE Status = 'Active'";
+$sql = "SELECT Asset_Name, Serial_Number, Purchase_Date, Warranty_Expiry, Status FROM assets";
 $result = $conn->query($sql);
 
 // Close connection at the end
@@ -250,6 +250,18 @@ $conn->close();
             border: 1px solid #c3e6cb;
         }
 
+        .status-retired {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-repair {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -360,12 +372,28 @@ $conn->close();
                             <?php
                             if ($result->num_rows > 0) {
                                 while ($row = $result->fetch_assoc()) {
+                                    // Determine status CSS class based on status value
+                                    $status = strtolower(trim($row['Status']));
+                                    $statusClass = 'status-active'; // default
+                                    
+                                    switch ($status) {
+                                        case 'retired':
+                                            $statusClass = 'status-retired';
+                                            break;
+                                        case 'in repair':
+                                            $statusClass = 'status-repair';
+                                            break;
+                                        case 'active':
+                                            $statusClass = 'status-active';
+                                            break;
+                                    }
+                                    
                                     echo "<tr>";
                                     echo "<td>" . htmlspecialchars($row['Asset_Name']) . "</td>";
                                     echo "<td>" . htmlspecialchars($row['Serial_Number']) . "</td>";
                                     echo "<td>" . (new DateTime($row['Purchase_Date']))->format('d/m/Y') . "</td>";
                                     echo "<td>" . (new DateTime($row['Warranty_Expiry']))->format('d/m/Y') . "</td>";
-                                    echo "<td><span class='status-badge status-active'>" . htmlspecialchars($row['Status']) . "</span></td>";
+                                    echo "<td><span class='status-badge $statusClass'>" . htmlspecialchars($row['Status']) . "</span></td>";
                                     echo "</tr>";
                                 }
                             } else {

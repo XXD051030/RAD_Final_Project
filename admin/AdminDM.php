@@ -42,9 +42,13 @@ $conn->close();
     <meta charset="UTF-8">
     <title>Admin Device Management</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
             background-color: #f4f6f8;
         }
         /* Sidebar Styles */
@@ -55,6 +59,8 @@ $conn->close();
             display: flex;
             flex-direction: column;
             position: fixed;
+            left: 0;
+            top: 0;
             height: 100vh;
             z-index: 1000;
         }
@@ -138,7 +144,7 @@ $conn->close();
         /* Remove global link styles that interfere with navigation */
         /*content*/
         .content {
-            margin-left: 220px;
+            margin-left: 240px;
             padding: 30px;
             background-color: #fff;
             min-height: 100vh;

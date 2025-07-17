@@ -239,6 +239,9 @@ $conn->close();
 </head>
 <body>
     <div class="login-container">
+        <div style="margin-bottom: 25px;">
+            <img src="images/logo/infinecs.png" alt="Logo" style="max-width: 130px; height: auto; display: block; margin: 0 auto;">
+        </div>
         <h1 class="login-title">Login</h1>
         <h2 class="login-subtitle">Admin</h2>
         
