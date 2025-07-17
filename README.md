@@ -1,6 +1,6 @@
-# RAD - Resource Allocation Dashboard
+# RAD - Final Project
 
-A comprehensive web-based system for managing assets and resources with automatic database setup functionality for both user and admin portals.
+A Assets management web based system.
 
 ## 🚀 Features
 
@@ -292,8 +292,8 @@ The system is designed to be self-healing and requires minimal support:
 
 ## 📅 Version Information
 
-**Current Version**: v0.9.6+  
-**Last Updated**: December 2024  
+**Current Version**: V1.1
+**Last Updated**: July 2025 
 **Major Features**: Enhanced device management, advanced search, improved UI/UX, booking system optimization
 
 ### Version History
