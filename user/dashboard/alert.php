@@ -36,6 +36,62 @@ while ($row = $result->fetch_assoc()) {
 $three_months_count = count($devices_nearing_expiry); // Update variable name for consistency
 
 $stmt->close();
+
+// Get user's recent borrow request activity - 获取用户最近的借用请求活动
+$user_id = $_SESSION['userid'];
+$recent_activity = [];
+
+// Get recent borrow requests for this user (last 30 days) - 获取用户最近30天的借用请求
+$thirty_days_ago = date('Y-m-d H:i:s', strtotime('-30 days'));
+$activity_sql = "SELECT 
+    asset_name, 
+    status, 
+    borrow_date, 
+    return_date, 
+    created_at,
+    updated_at
+FROM borrow_requests 
+WHERE user_id = ? 
+AND (created_at >= ? OR updated_at >= ?)
+ORDER BY COALESCE(updated_at, created_at) DESC 
+LIMIT 10";
+
+$activity_stmt = $conn->prepare($activity_sql);
+$activity_stmt->bind_param("sss", $user_id, $thirty_days_ago, $thirty_days_ago);
+$activity_stmt->execute();
+$activity_result = $activity_stmt->get_result();
+
+while ($row = $activity_result->fetch_assoc()) {
+    // Use updated_at if available, otherwise use created_at
+    $activity_date = !empty($row['updated_at']) ? $row['updated_at'] : $row['created_at'];
+    
+    // Create description based on status
+    switch ($row['status']) {
+        case 'pending':
+            $description = "Borrow request submitted - Pending approval";
+            break;
+        case 'approved':
+            $description = "Borrow request approved - Asset ready for pickup";
+            break;
+        case 'declined':
+            $description = "Borrow request declined";
+            break;
+        case 'returned':
+            $description = "Asset returned successfully";
+            break;
+        default:
+            $description = "Borrow request status: " . ucfirst($row['status']);
+    }
+    
+    $recent_activity[] = [
+        'date' => $activity_date,
+        'asset_name' => $row['asset_name'],
+        'description' => $description,
+        'status' => $row['status']
+    ];
+}
+
+$activity_stmt->close();
 $conn->close();
 ?>
 
@@ -281,6 +337,41 @@ $conn->close();
             padding: 20px;
         }
 
+        /* Status Badge Styles for Activity Log */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status-approved {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-declined {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-returned {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .sidebar {
@@ -430,19 +521,33 @@ $conn->close();
 
             <!-- Recent Activity Log Section - 最近活动日志部分 -->
             <div class="activity-section">
-                <h3 class="activity-header">Recent Activity Log</h3>
+                <h3 class="activity-header">Recent Activity Log - Booking Status Updates</h3>
                 <table class="activity-table">
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Serial Number</th>
-                            <th>Description</th>
+                            <th>Asset Name</th>
+                            <th>Status Update</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td colspan="3" class="no-activity">No recent activity.</td>
-                        </tr>
+                        <?php if (count($recent_activity) > 0): ?>
+                            <?php foreach ($recent_activity as $activity): ?>
+                                <tr>
+                                    <td><?php echo date('M d, Y H:i', strtotime($activity['date'])); ?></td>
+                                    <td><?php echo htmlspecialchars($activity['asset_name']); ?></td>
+                                    <td>
+                                        <span class="status-badge status-<?php echo $activity['status']; ?>">
+                                            <?php echo htmlspecialchars($activity['description']); ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="3" class="no-activity">No recent booking activity in the last 30 days.</td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>

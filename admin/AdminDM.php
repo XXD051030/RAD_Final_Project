@@ -19,13 +19,30 @@ $search = $_GET['search'] ?? '';
 
 // Prepare and execute query based on search
 if ($search) {
-    $stmt = $conn->prepare("SELECT Asset_ID, Asset_Name, Category, Brand_Model, Serial_Number, Location, Assigned_To, Purchase_Date, Warranty_Expiry, Asset_Value, Status, Supplier FROM assets WHERE Asset_Name LIKE ? OR Serial_Number LIKE ? OR Category LIKE ?");
+    // Enhanced search - case insensitive and searches across all relevant fields
+    $stmt = $conn->prepare("
+        SELECT Asset_ID, Asset_Name, Category, Brand_Model, Serial_Number, Location, Assigned_To, Purchase_Date, Warranty_Expiry, Asset_Value, Status, Supplier 
+        FROM assets 
+        WHERE LOWER(Asset_ID) LIKE LOWER(?) 
+           OR LOWER(Asset_Name) LIKE LOWER(?) 
+           OR LOWER(Category) LIKE LOWER(?) 
+           OR LOWER(Brand_Model) LIKE LOWER(?) 
+           OR LOWER(Serial_Number) LIKE LOWER(?) 
+           OR LOWER(Location) LIKE LOWER(?) 
+           OR LOWER(Assigned_To) LIKE LOWER(?) 
+           OR LOWER(Status) LIKE LOWER(?) 
+           OR LOWER(Supplier) LIKE LOWER(?)
+           OR LOWER(Asset_Value) LIKE LOWER(?)
+           OR LOWER(Purchase_Date) LIKE LOWER(?)
+           OR LOWER(Warranty_Expiry) LIKE LOWER(?)
+        ORDER BY Asset_Name ASC
+    ");
     $like = "%$search%";
-    $stmt->bind_param("sss", $like, $like, $like);
+    $stmt->bind_param("ssssssssssss", $like, $like, $like, $like, $like, $like, $like, $like, $like, $like, $like, $like);
     $stmt->execute();
     $result = $stmt->get_result();
 } else {
-    $stmt = $conn->prepare("SELECT Asset_ID, Asset_Name, Category, Brand_Model, Serial_Number, Location, Assigned_To, Purchase_Date, Warranty_Expiry, Asset_Value, Status, Supplier FROM assets");
+    $stmt = $conn->prepare("SELECT Asset_ID, Asset_Name, Category, Brand_Model, Serial_Number, Location, Assigned_To, Purchase_Date, Warranty_Expiry, Asset_Value, Status, Supplier FROM assets ORDER BY Asset_Name ASC");
     $stmt->execute();
     $result = $stmt->get_result();
 }
@@ -51,8 +68,13 @@ $conn->close();
             box-sizing: border-box;
         }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            overflow-x: hidden;
+        }
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
         }
         /* Sidebar Styles */
         .sidebar {
@@ -147,111 +169,328 @@ $conn->close();
             background-color: #c9302c;
         }
         /* Remove global link styles that interfere with navigation */
-        /*content*/
-        .content {
+        /* Main Content */
+        .main-content {
             margin-left: 240px;
+            flex: 1;
             padding: 30px;
-            background-color: #fff;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden; /* Prevent main content from scrolling */
+            display: flex;
+            flex-direction: column;
         }
-        h2 {
-            color: #2c3e50;
+        .dashboard-header {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 30px;
+            flex-shrink: 0; /* Prevent header from shrinking */
         }
-        h3 {
-            color: #2c3e50;
+        
+        /* Action Buttons Section */
+        .action-buttons-section {
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            flex-shrink: 0; /* Prevent section from shrinking */
         }
-        .actions {
+        .action-buttons-header {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
             margin-bottom: 20px;
         }
-        .button {
-            padding: 8px 16px;
-            margin-right: 30px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .button:hover {
-            background-color: #2980b9;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: #fff;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #e0e7f7;
-            color: #2c3e50;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #e6f3ff;
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
         }
         .action-btn {
-            padding: 6px 12px;
-            margin: 2px;
-            font-weight: bold;
+            padding: 12px 24px;
+            background-color: #4a90e2;
+            color: white;
+            text-decoration: none;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .action-btn:hover {
+            background-color: #357abd;
+            transform: translateY(-1px);
+        }
+        /* Assets Table Section */
+        .assets-section {
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            height: calc(100vh - 420px); /* Fixed height to prevent page scrolling */
+            display: flex;
+            flex-direction: column;
+        }
+        .assets-header {
+            background: white;
+            padding: 20px 25px;
+            border-bottom: 2px solid #333;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
+        .assets-table-container {
+            flex: 1;
+            overflow-y: auto; /* Enable vertical scrolling */
+            overflow-x: auto; /* Keep horizontal scrolling for wide tables */
+            max-height: 100%;
+        }
+        .assets-table {
+            width: 100%;
+            border-collapse: collapse;
+            position: relative;
+        }
+        .assets-table th {
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+            position: sticky; /* Keep headers visible while scrolling */
+            top: 0;
+            z-index: 10;
+        }
+        .assets-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            color: #333;
+            font-size: 14px;
+        }
+        /* Specific width adjustments for certain columns */
+        .assets-table th:nth-child(4), /* Brand/Model column header */
+        .assets-table td:nth-child(4) { /* Brand/Model column data */
+            width: 150px;
+            min-width: 150px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .assets-table th:nth-child(5), /* Serial Number column header */
+        .assets-table td:nth-child(5) { /* Serial Number column data */
+            width: 140px;
+            min-width: 140px;
+        }
+        .assets-table td:nth-child(5) code {
+            font-family: 'Courier New', monospace;
+            background-color: transparent;
+            padding: 0;
+            font-size: 13px;
+            color: inherit;
+        }
+        .assets-table th:nth-child(6), /* Location column header */
+        .assets-table td:nth-child(6) { /* Location column data */
+            width: 130px;
+            min-width: 130px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .assets-table th:nth-child(7), /* Assigned To column header */
+        .assets-table td:nth-child(7) { /* Assigned To column data */
+            width: 130px;
+            min-width: 130px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .assets-table th:nth-child(8), /* Purchase Date column header */
+        .assets-table td:nth-child(8) { /* Purchase Date column data */
+            width: 140px;
+            min-width: 140px;
+            text-align: center;
+        }
+        .assets-table th:nth-child(9), /* Warranty Expiry column header */
+        .assets-table td:nth-child(9) { /* Warranty Expiry column data */
+            width: 140px;
+            min-width: 140px;
+            text-align: center;
+        }
+        .assets-table th:nth-child(10), /* Value column header */
+        .assets-table td:nth-child(10) { /* Value column data */
+            width: 120px;
+            min-width: 120px;
+            text-align: right;
+        }
+        .assets-table th:nth-child(11), /* Status column header */
+        .assets-table td:nth-child(11) { /* Status column data */
+            width: 140px;
+            min-width: 140px;
+            text-align: center;
+        }
+        .assets-table th:nth-child(13), /* Actions column header */
+        .assets-table td:nth-child(13) { /* Actions column data */
+            width: 140px;
+            min-width: 140px;
+            text-align: center;
+        }
+        .assets-table tr {
+            background-color: #e3f2fd;
+            transition: background-color 0.2s ease;
+        }
+        .assets-table tr:hover {
+            background-color: #bbdefb;
+        }
+        
+        /* Custom Scrollbar Styling */
+        .assets-table-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .assets-table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .assets-table-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        .assets-table-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        .update-btn {
+            padding: 8px 16px;
+            background-color: #4a90e2;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 100px;
+            justify-content: center;
+        }
+        .update-btn:hover {
+            background-color: #357abd;
+            transform: translateY(-1px);
         }
 
+        /* Search Section */
+        .search-section {
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            flex-shrink: 0; /* Prevent section from shrinking */
+        }
         .search-form {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            justify-content: flex-start;
+            gap: 12px;
             align-items: center;
         }
-
         .search-input {
-            padding: 10px 14px;
-            width: 280px;
-            border: 1px solid #ccc;
+            flex: 1;
+            max-width: 400px;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
             border-radius: 6px;
-            font-size: 16px;
-            transition: all 0.3s ease;
+            font-size: 14px;
+            transition: all 0.2s ease;
         }
-
         .search-input:focus {
-            border-color: #3498db;
+            border-color: #4a90e2;
             outline: none;
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
         }
-
         .search-button {
-            padding: 10px 20px;
-            background-color: #3498db;
+            padding: 12px 24px;
+            background-color: #4a90e2;
             color: white;
             border: none;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.2s ease;
         }
-
         .search-button:hover {
-            background-color: #2980b9;
+            background-color: #357abd;
         }
-
-        /* Edit button */
-        .edit-btn {
-            background-color: #3498db;
+        .clear-search-btn {
+            padding: 12px 20px;
+            background-color: #6c757d;
             color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .clear-search-btn:hover {
+            background-color: #5a6268;
         }
 
-        .edit-btn:hover {
-            background-color: #2980b9;
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 80px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-retired {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-repair {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        /* Handle longer status text like "IN REPAIR" */
+        .status-inrepair {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        /* Additional status variations */
+        .status-maintenance {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-pending {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
         }
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -264,9 +503,60 @@ $conn->close();
                 transform: translateX(0);
             }
 
-            .content {
+            .main-content {
                 margin-left: 0;
                 padding: 20px;
+                height: 100vh;
+            }
+            
+            .dashboard-header {
+                font-size: 24px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .search-form {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .search-input {
+                max-width: 100%;
+            }
+            
+            .assets-section {
+                height: calc(100vh - 500px); /* Adjust for mobile */
+            }
+            
+            /* Reset column widths for mobile */
+            .assets-table th:nth-child(4),
+            .assets-table td:nth-child(4),
+            .assets-table th:nth-child(5),
+            .assets-table td:nth-child(5),
+            .assets-table th:nth-child(6),
+            .assets-table td:nth-child(6),
+            .assets-table th:nth-child(7),
+            .assets-table td:nth-child(7),
+            .assets-table th:nth-child(8),
+            .assets-table td:nth-child(8),
+            .assets-table th:nth-child(9),
+            .assets-table td:nth-child(9),
+            .assets-table th:nth-child(10),
+            .assets-table td:nth-child(10),
+            .assets-table th:nth-child(11),
+            .assets-table td:nth-child(11),
+            .assets-table th:nth-child(13),
+            .assets-table td:nth-child(13) {
+                width: auto;
+                min-width: auto;
+            }
+            
+            .status-badge {
+                padding: 4px 8px;
+                font-size: 10px;
+                min-width: 60px;
             }
         }
 
@@ -292,13 +582,12 @@ $conn->close();
         }
 
         /* Adjust existing layout */
-        body {
+        /* Adjust existing layout */
+        .dashboard-container {
             padding-top: 70px;
         }
 
-
-
-        .content {
+        .main-content {
             margin-top: 0;
         }
 
@@ -318,89 +607,141 @@ $conn->close();
         <img src="../images/logo/infinecsfull.png" alt="Infinecs - Innovate Frontier Together">
     </div>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="profile-section">
-            <div class="profile-image">👤</div>
-            <p>Welcome, <?php echo htmlspecialchars($_SESSION['adminID']); ?>!</p>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile-section">
+                <div class="profile-image">👤</div>
+                <p>Welcome, <?php echo htmlspecialchars($_SESSION['adminID']); ?>!</p>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="dashboard.php" class="nav-item">
+                    <span class="nav-icon"></span>
+                    Dashboard
+                </a>
+                <a href="AdminDM.php" class="nav-item active">
+                    <span class="nav-icon"></span>
+                    Device Management
+                </a>
+                <a href="borrow-requests.php" class="nav-item">
+                    <span class="nav-icon"></span>
+                    Borrow Requests
+                </a>
+                <a href="account-management.php" class="nav-item">
+                    <span class="nav-icon"></span>
+                    Account Management
+                </a>
+                <a href="alert.php" class="nav-item">
+                    <span class="nav-icon"></span>
+                    Alert
+                </a>
+            </nav>
+            
+            <div class="logout-section">
+                <button class="logout-btn" onclick="logout()">Log Out</button>
+            </div>
         </div>
-        
-        <nav class="nav-menu">
-            <a href="dashboard.php" class="nav-item">
-                <span class="nav-icon"></span>
-                Dashboard
-            </a>
-            <a href="AdminDM.php" class="nav-item active">
-                <span class="nav-icon"></span>
-                Device Management
-            </a>
-            <a href="borrow-requests.php" class="nav-item">
-                <span class="nav-icon"></span>
-                Borrow Requests
-            </a>
-            <a href="account-management.php" class="nav-item">
-                <span class="nav-icon"></span>
-                Account Management
-            </a>
-            <a href="alert.php" class="nav-item">
-                <span class="nav-icon"></span>
-                Alert
-            </a>
-        </nav>
-        
-        <div class="logout-section">
-            <button class="logout-btn" onclick="logout()">Log Out</button>
-        </div>
-    </div>
-    <div class="content">
-        <h2>Admin Device Management</h2>
-        <div>
-            <a href="add-asset.php"><button class="button">Add Asset</button></a>
-            <a href="view-asset.php"><button class="button">View Asset</button></a>
-            <a href="delete-asset.php"><button class="button">Delete Asset</button></a>
-        </div>
-        <h3>Asset Table</h3>
-        <br>
-        <form class="search-form" method="GET">
-            <input type="text" name="search" class="search-input" placeholder="Search device..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-            <button type="submit" class="search-button">Search</button>
-        </form>
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>Asset Name</th>
-                <th>Category</th>
-                <th>Brand_Model</th>
-                <th>Serial Number</th>
-                <th>Location</th>
-                <th>Assigned_To</th>
-                <th>Purchase_Date</th>
-                <th>Warranty_Expiry</th>
-                <th>Asset_Value</th>
-                <th>Status</th>
-                <th>Supplier</th>
-                <th>Actions</th>
-            </tr>
-            <?php foreach ($devices as $device): ?>
-            <tr>
-                <td><?= htmlspecialchars($device['Asset_ID']) ?></td>
-                <td><?= htmlspecialchars($device['Asset_Name']) ?></td>
-                <td><?= htmlspecialchars($device['Category']) ?></td>
-                <td><?= htmlspecialchars($device['Brand_Model']) ?></td>
-                <td><?= htmlspecialchars($device['Serial_Number']) ?></td>
-                <td><?= htmlspecialchars($device['Location']) ?></td>
-                <td><?= htmlspecialchars($device['Assigned_To']) ?></td>
-                <td><?= htmlspecialchars($device['Purchase_Date']) ?></td>
-                <td><?= htmlspecialchars($device['Warranty_Expiry']) ?></td>
-                <td><?= htmlspecialchars($device['Asset_Value']) ?></td>
-                <td><?= htmlspecialchars($device['Status']) ?></td>
-                <td><?= htmlspecialchars($device['Supplier']) ?></td>
-                <td> <a href="update-asset.php?id=<?= urlencode($device['Asset_ID']) ?>"> <button class="button">Update</button></a>
-</td>
 
-            </tr>
-            <?php endforeach; ?>
-        </table>
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1 class="dashboard-header">Device Management</h1>
+            
+            <!-- Action Buttons Section -->
+            <div class="action-buttons-section">
+                <div class="action-buttons-header">Quick Actions</div>
+                <div class="action-buttons">
+                    <a href="add-asset.php" class="action-btn">
+                        ➕ Add Asset
+                    </a>
+                    <a href="view-asset.php" class="action-btn">
+                        👁️ View Assets
+                    </a>
+                    <a href="delete-asset.php" class="action-btn">
+                        🗑️ Delete Asset
+                    </a>
+                </div>
+            </div>
+
+            <!-- Search Section -->
+            <div class="search-section">
+                <form class="search-form" method="GET">
+                    <input type="text" name="search" class="search-input" placeholder="Search assets by any field (ID, name, category, serial number, location, status, etc.)..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                    <button type="submit" class="search-button">🔍 Search</button>
+                    <?php if (!empty($_GET['search'])): ?>
+                        <a href="AdminDM.php" class="clear-search-btn">✖️ Clear</a>
+                    <?php endif; ?>
+                </form>
+            </div>
+
+            <!-- Assets Table -->
+            <div class="assets-section">
+                <div class="assets-header">
+                    <?php if (!empty($search)): ?>
+                        Search Results for "<?= htmlspecialchars($search) ?>"
+                    <?php else: ?>
+                        Assets Overview
+                    <?php endif; ?>
+                    <span style="font-size: 14px; font-weight: normal; color: #6c757d;">
+                        <?= count($devices) ?> asset(s) 
+                        <?= !empty($search) ? 'found' : 'total' ?>
+                    </span>
+                </div>
+                <div class="assets-table-container">
+                    <table class="assets-table">
+                        <thead>
+                            <tr>
+                                <th>Asset ID</th>
+                                <th>Asset Name</th>
+                                <th>Category</th>
+                                <th>Brand/Model</th>
+                                <th>Serial Number</th>
+                                <th>Location</th>
+                                <th>Assigned To</th>
+                                <th>Purchase Date</th>
+                                <th>Warranty Expiry</th>
+                                <th>Value</th>
+                                <th>Status</th>
+                                <th>Supplier</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($devices as $device): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($device['Asset_ID']) ?></td>
+                                <td><strong><?= htmlspecialchars($device['Asset_Name']) ?></strong></td>
+                                <td><?= htmlspecialchars($device['Category']) ?></td>
+                                <td><?= htmlspecialchars($device['Brand_Model']) ?></td>
+                                <td><code><?= htmlspecialchars($device['Serial_Number']) ?></code></td>
+                                <td><?= htmlspecialchars($device['Location']) ?></td>
+                                <td><?= htmlspecialchars($device['Assigned_To'] ?: 'Unassigned') ?></td>
+                                <td style="text-align: center;"><?= htmlspecialchars($device['Purchase_Date']) ?></td>
+                                <td style="text-align: center;"><?= htmlspecialchars($device['Warranty_Expiry']) ?></td>
+                                <td style="text-align: right;">$<?= number_format($device['Asset_Value'], 2) ?></td>
+                                <td>
+                                    <?php
+                                    // Handle status formatting for CSS classes
+                                    $status = $device['Status'];
+                                    $statusClass = 'status-' . strtolower(str_replace(' ', '', $status));
+                                    ?>
+                                    <span class="status-badge <?= $statusClass ?>">
+                                        <?= htmlspecialchars($status) ?>
+                                    </span>
+                                </td>
+                                <td><?= htmlspecialchars($device['Supplier']) ?></td>
+                                <td style="text-align: center;">
+                                    <a href="update-asset.php?id=<?= urlencode($device['Asset_ID']) ?>" class="update-btn">
+                                        ✏️ Update
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
     <script>
         function logout() {

@@ -528,7 +528,7 @@ $stats = $stats_result->fetch_assoc();
                             <th>User</th>
                             <th>Asset Name</th>
                             <th>Asset ID</th>
-                            <th>Request Date</th>
+                            <th>Borrow Period</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -543,7 +543,10 @@ $stats = $stats_result->fetch_assoc();
                                 echo "<td>" . htmlspecialchars($row['user_id']) . "</td>";
                                 echo "<td>" . htmlspecialchars($row['asset_name']) . "</td>";
                                 echo "<td>" . htmlspecialchars($row['asset_id']) . "</td>";
-                                echo "<td>" . date('M j, Y', strtotime($row['created_at'])) . "</td>";
+                                // Display borrow period (borrow_date to return_date)
+                                $borrowStart = date('M j, Y', strtotime($row['borrow_date']));
+                                $borrowEnd = date('M j, Y', strtotime($row['return_date']));
+                                echo "<td>" . $borrowStart . " - " . $borrowEnd . "</td>";
                                 echo "<td><span class='status-badge $statusClass'>" . $row['status'] . "</span></td>";
                                 echo "<td>";
                                 if ($row['status'] === 'pending') {
