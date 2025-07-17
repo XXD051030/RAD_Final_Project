@@ -4,17 +4,48 @@ A comprehensive web-based system for managing assets and resources with automati
 
 ## 🚀 Features
 
+### Core System Features
 - **Automatic Database Setup**: No manual configuration required - the system automatically creates and configures the database
-- **Dual Portal System**: Separate user and admin interfaces
+- **Dual Portal System**: Separate user and admin interfaces with unified modern design
 - **Enhanced User Authentication**: 
   - Secure login system with password hashing for both portals
   - Real-time password validation with live character count
   - Visual feedback for password strength and confirmation matching
   - Smart form validation prevents submission until all requirements are met
-- **Asset Management**: Track and manage organizational assets
-- **Responsive Design**: Modern, mobile-friendly interface
-- **Real-time Status Updates**: Live feedback during system initialization
 - **Silent Error Handling**: Seamless user experience with background problem resolution
+
+### Admin Portal Features
+- **Advanced Device Management**: 
+  - Modern card-based interface with optimized table layouts
+  - Intelligent search across all asset fields (case-insensitive)
+  - Fixed-position controls with scrollable content area
+  - Optimized column widths for better data visibility
+- **Request Management**: 
+  - Real-time borrow request processing
+  - Borrow period display instead of request dates
+  - Status tracking with visual indicators
+- **Alert System**: Warranty expiry notifications and activity logging
+
+### User Portal Features
+- **Asset Browsing**: Clean interface for viewing available assets
+- **Borrow Request System**: 
+  - Easy asset borrowing with date selection
+  - Real-time status tracking
+  - Borrow period visualization
+- **Activity Monitoring**: 
+  - Booking status updates in alert dashboard
+  - Recent activity log with status changes
+  - Visual status indicators
+
+### Design & UX Features
+- **Unified Modern Design**: Consistent styling across all pages
+- **Responsive Layout**: Optimized for desktop and mobile devices
+- **Enhanced Navigation**: Fixed navigation with proper text wrapping
+- **Smart Tables**: 
+  - Fixed headers with scrollable content
+  - Optimized column widths for different data types
+  - Custom scrollbars for better user experience
+- **Status Visualization**: Color-coded status badges for quick identification
 
 ## 📋 Prerequisites
 
@@ -39,7 +70,7 @@ A comprehensive web-based system for managing assets and resources with automati
 
 2. **Access the System**:
    - Open your web browser
-   - **User Portal**: `http://localhost/dashboard/rad-final/user/user/login.php`
+   - **User Portal**: `http://localhost/dashboard/rad-final/user/login.php`
    - **Admin Portal**: `http://localhost/dashboard/rad-final/admin/login.php`
 
 ### Step 3: Automatic Database Setup
@@ -59,7 +90,7 @@ After automatic setup, you can login with:
 ### User Login
 - **UserID**: `user1`
 - **Password**: `user123`
-- **URL**: `http://localhost/dashboard/rad-final/user/user/login.php`
+- **URL**: `http://localhost/dashboard/rad-final/user/login.php`
 
 ### Admin Login
 - **AdminID**: `admin123`
@@ -70,20 +101,33 @@ After automatic setup, you can login with:
 
 ```
 rad-final/
-├── admin/                  # Admin portal files
-│   ├── login.php          # Admin login with auto-setup
-│   ├── db_connect_safe.php # Safe database connection
-│   ├── auto_setup.php     # Automatic setup script
-│   ├── dashboard.php      # Admin dashboard
-│   └── ...
-├── user/                   # User portal files
-│   └── user/
-│       ├── login.php       # User login with auto-setup
-│       ├── db_connect_safe.php  # Safe database connection
-│       ├── auto_setup.php  # Automatic setup script
-│       ├── dashboard/      # User dashboard
-│       └── ...
-└── README.md              # This file
+├── admin/                     # Admin portal files
+│   ├── login.php             # Admin login with auto-setup
+│   ├── dashboard.php         # Admin dashboard with modern design
+│   ├── AdminDM.php           # Enhanced device management
+│   ├── borrow-requests.php   # Request management system
+│   ├── alert.php             # Admin alert dashboard
+│   ├── account-management.php # User account management
+│   ├── add-asset.php         # Asset creation interface
+│   ├── update-asset.php      # Asset modification interface
+│   ├── view-asset.php        # Asset viewing interface
+│   ├── delete-asset.php      # Asset deletion interface
+│   └── db_connect_safe.php   # Safe database connection
+├── user/                     # User portal files
+│   ├── login.php            # User login with auto-setup
+│   ├── signup.php           # User registration
+│   ├── View.php             # Asset viewing interface
+│   ├── borrow-status.php    # Borrow request tracking
+│   ├── dashboard/           # User dashboard section
+│   │   ├── dashboard.php    # Main user dashboard
+│   │   ├── alert.php        # User alerts with booking status
+│   │   └── borrow.php       # Asset borrowing interface
+│   └── db_connect_safe.php  # Safe database connection
+├── database/                # Database management
+│   └── auto_database_check.php # Automatic setup utilities
+├── images/                  # System assets
+│   └── logo/               # Logo files
+└── README.md               # This documentation
 ```
 
 ## 🔧 Troubleshooting
@@ -133,43 +177,7 @@ rad-final/
 - **Input Validation**: Form inputs are validated and sanitized both client-side and server-side
 - **Separation of Concerns**: User and admin portals are completely separate
 
-## 📊 Database Schema
 
-### Users Table
-```sql
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    userID VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
-);
-```
-
-### Admin Table
-```sql
-CREATE TABLE admin (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    adminID VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
-);
-```
-
-### Assets Table
-```sql
-CREATE TABLE assets (
-    Asset_ID VARCHAR(10) PRIMARY KEY,
-    Asset_Name VARCHAR(100) NOT NULL,
-    Category VARCHAR(50) NOT NULL,
-    Brand_Model VARCHAR(100),
-    Serial_Number VARCHAR(50) UNIQUE,
-    Location VARCHAR(100),
-    Assigned_To VARCHAR(100),
-    Purchase_Date DATE,
-    Warranty_Expiry DATE,
-    Asset_Value DECIMAL(10, 2),
-    Status VARCHAR(20),
-    Supplier VARCHAR(100)
-);
-```
 
 ## 🚀 Quick Start Guide
 
@@ -180,14 +188,63 @@ CREATE TABLE assets (
    - **Admin**: `admin123` / `123456`
 4. **Start Using**: Access dashboard and asset management features
 
+## 🆕 Latest Features & Improvements
+
+### Enhanced Admin Device Management
+- **Smart Search**: Search across all asset fields (ID, name, category, brand, serial number, location, status, etc.)
+- **Case-Insensitive Search**: Find assets regardless of text case
+- **Optimized Table Layout**: 
+  - Fixed header with scrollable content
+  - Optimized column widths for better readability
+  - Custom scrollbars for improved visual experience
+- **Professional Data Display**:
+  - Serial numbers in monospace font
+  - Currency formatting for asset values
+  - Color-coded status badges
+  - Centered date displays
+
+### Improved Navigation & UX
+- **Fixed Navigation**: Menu items properly wrap for longer text (e.g., "Device Management", "Account Management")
+- **Consistent Design**: Unified modern styling across all admin pages
+- **Responsive Layout**: Works seamlessly on desktop and mobile devices
+- **Enhanced Buttons**: Modern button design with hover effects and better spacing
+
+### Advanced Booking System
+- **Borrow Period Display**: Shows actual borrowing timeframe instead of request creation date
+- **Real-Time Status Tracking**: Visual indicators for request status changes
+- **User Activity Logs**: Comprehensive booking history in user alert dashboard
+- **Status Notifications**: Clear status updates (Pending, Approved, Declined, Returned)
+
+### UI/UX Enhancements
+- **Fixed Content Areas**: Important controls stay visible while browsing large datasets
+- **Smart Column Sizing**: Appropriate widths for different data types
+- **Visual Status System**: Color-coded badges for quick status identification
+- **Improved Readability**: Better typography and spacing throughout the system
+
 ## 📝 Development Notes
 
 - **Framework**: Pure PHP with MySQL
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Database**: MySQL with automatic setup
 - **Architecture**: MVC-inspired structure with dual portal system
-- **Responsive**: Bootstrap-inspired responsive design
+- **Responsive**: Modern responsive design with mobile-first approach
 - **User Experience**: Completely seamless with silent error recovery
+
+### Recent Enhancements (v0.9.6+)
+- **Enhanced Search**: Comprehensive search across all asset fields with case-insensitive matching
+- **Improved UI/UX**: 
+  - Fixed navigation with proper text wrapping for longer menu items
+  - Optimized table layouts with appropriate column widths
+  - Fixed-position controls with scrollable content areas
+  - Custom scrollbar styling for better visual experience
+- **Better Data Visualization**: 
+  - Status badges with color coding
+  - Proper currency and date formatting
+  - Serial numbers in monospace font for clarity
+- **Activity Tracking**: 
+  - User activity logs for booking status changes
+  - Real-time status updates in alert dashboards
+  - Borrow period display instead of request timestamps
 
 ## 🆘 Support
 
@@ -201,13 +258,53 @@ The system is designed to be self-healing and requires minimal support:
 
 ## 🌟 Key Benefits
 
-- **Zero Configuration**: Works out of the box
+- **Zero Configuration**: Works out of the box with automatic setup
 - **Self-Healing**: Automatically fixes common problems
-- **User-Friendly**: No technical knowledge required
-- **Dual System**: Separate user and admin workflows
-- **Production Ready**: Secure and robust implementation
+- **User-Friendly**: Intuitive interface requiring no technical knowledge
+- **Dual System**: Separate optimized workflows for users and administrators
+- **Production Ready**: Secure, robust, and scalable implementation
+- **Modern Design**: Clean, professional interface with excellent user experience
+- **Comprehensive Search**: Find assets quickly using any field or partial information
+- **Real-Time Updates**: Live status tracking and activity monitoring
+- **Mobile Optimized**: Full functionality on all devices
+
+## 🎯 System Capabilities
+
+### Asset Management
+- **Complete Asset Lifecycle**: From procurement to retirement
+- **Advanced Search**: Search by ID, name, category, serial number, location, status, etc.
+- **Status Tracking**: Visual status indicators (Active, Retired, In Repair, etc.)
+- **Warranty Management**: Automatic expiry tracking and alerts
+
+### Booking System
+- **User-Friendly Requests**: Simple asset borrowing interface
+- **Period-Based Tracking**: Clear display of borrow periods vs request dates
+- **Status Management**: Real-time status updates (Pending, Approved, Declined, Returned)
+- **Activity Logging**: Complete audit trail of all booking activities
+
+### Administrative Features
+- **Request Processing**: Efficient approval/decline workflow
+- **User Management**: Account creation and management
+- **Alert Dashboard**: Proactive notifications for warranty expiry
+- **Data Export**: Easy data management and reporting
 
 ---
 
-**Last Updated**: July 2025  
-**Version**: 1.1
+## 📅 Version Information
+
+**Current Version**: v0.9.6+  
+**Last Updated**: December 2024  
+**Major Features**: Enhanced device management, advanced search, improved UI/UX, booking system optimization
+
+### Version History
+- **v0.9.6**: Major UI/UX improvements, enhanced search functionality, optimized table layouts
+- **v0.9.5**: Booking system improvements, status tracking enhancements
+- **v0.9.0**: Initial release with dual portal system and automatic setup
+
+---
+
+*RAD - Making resource allocation simple, efficient, and transparent.*
+
+**System Status**: Production Ready ✅  
+**Maintenance**: Self-healing with automatic problem resolution  
+**Support**: Comprehensive documentation and troubleshooting guides included
