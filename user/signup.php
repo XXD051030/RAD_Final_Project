@@ -36,9 +36,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                 
                 // Insert new user
-                $sql = "INSERT INTO users (userID, password) VALUES (?, ?)";
+                $sql = "INSERT INTO users (userID, password, email) VALUES (?, ?, ?)";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ss", $userID, $hashed_password);
+                $stmt->bind_param("sss", $userID, $hashed_password, $email);
 
                 if ($stmt->execute()) {
                     // Redirect to login page
@@ -314,6 +314,9 @@ if ($conn) {
 </head>
 <body>
     <div class="signup-container">
+        <div style="margin-bottom: 25px;">
+            <img src="../images/logo/infinecs.png" alt="Infinecs Logo" style="max-width: 130px; height: auto; display: block; margin: 0 auto;">
+        </div>
         <h1 class="signup-title">Sign Up</h1>
         <h2 class="signup-subtitle">user</h2>
         

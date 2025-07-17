@@ -37,9 +37,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                 
                 // Insert new admin
-                $sql = "INSERT INTO admin (adminID, password) VALUES (?, ?)";
+                $sql = "INSERT INTO admin (adminID, password, email) VALUES (?, ?, ?)";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ss", $adminID, $hashed_password);
+                $stmt->bind_param("sss", $adminID, $hashed_password, $email);
 
                 if ($stmt->execute()) {
                     // Redirect to login page
@@ -315,6 +315,9 @@ if ($conn) {
 </head>
 <body>
     <div class="register-container">
+        <div style="margin-bottom: 25px;">
+            <img src="../images/logo/infinecs.png" alt="Infinecs Logo" style="max-width: 130px; height: auto; display: block; margin: 0 auto;">
+        </div>
         <h1 class="register-title">Register</h1>
         <h2 class="register-subtitle">Admin</h2>
         

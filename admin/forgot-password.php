@@ -304,6 +304,9 @@ if ($conn) {
 </head>
 <body>
     <div class="forgot-container">
+        <div style="margin-bottom: 25px;">
+            <img src="../images/logo/infinecs.png" alt="Infinecs Logo" style="max-width: 130px; height: auto; display: block; margin: 0 auto;">
+        </div>
         <h1 class="forgot-title">Forgot Password</h1>
         <h2 class="forgot-subtitle">Admin</h2>
         

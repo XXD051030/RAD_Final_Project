@@ -35,19 +35,31 @@ try {
         $sql = "CREATE TABLE users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             userID VARCHAR(255) NOT NULL UNIQUE,
-            password VARCHAR(255) NOT NULL
+            password VARCHAR(255) NOT NULL,
+            email VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            status ENUM('active', 'inactive') DEFAULT 'active'
         )";
         
         if ($conn->query($sql)) {
             // Insert default user
             $testUser = "user1";
             $testPassword = password_hash("user123", PASSWORD_DEFAULT);
+            $testEmail = "user1@example.com";
             
-            $insertSql = "INSERT INTO users (userID, password) VALUES (?, ?)";
+            $insertSql = "INSERT INTO users (userID, password, email) VALUES (?, ?, ?)";
             $stmt = $conn->prepare($insertSql);
-            $stmt->bind_param("ss", $testUser, $testPassword);
+            $stmt->bind_param("sss", $testUser, $testPassword, $testEmail);
             $stmt->execute();
             $stmt->close();
+        }
+    } else {
+        // Check if new columns exist, add them if not
+        $columns = $conn->query("SHOW COLUMNS FROM users LIKE 'email'");
+        if ($columns->num_rows == 0) {
+            $conn->query("ALTER TABLE users ADD COLUMN email VARCHAR(255)");
+            $conn->query("ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+            $conn->query("ALTER TABLE users ADD COLUMN status ENUM('active', 'inactive') DEFAULT 'active'");
         }
     }
     
@@ -57,19 +69,31 @@ try {
         $sql = "CREATE TABLE admin (
             id INT AUTO_INCREMENT PRIMARY KEY,
             adminID VARCHAR(255) NOT NULL UNIQUE,
-            password VARCHAR(255) NOT NULL
+            password VARCHAR(255) NOT NULL,
+            email VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            status ENUM('active', 'inactive') DEFAULT 'active'
         )";
         
         if ($conn->query($sql)) {
             // Insert default admin
             $adminUser = "admin";
             $adminPassword = password_hash("admin123", PASSWORD_DEFAULT);
+            $adminEmail = "admin@infinecs.com";
             
-            $insertSql = "INSERT INTO admin (adminID, password) VALUES (?, ?)";
+            $insertSql = "INSERT INTO admin (adminID, password, email) VALUES (?, ?, ?)";
             $stmt = $conn->prepare($insertSql);
-            $stmt->bind_param("ss", $adminUser, $adminPassword);
+            $stmt->bind_param("sss", $adminUser, $adminPassword, $adminEmail);
             $stmt->execute();
             $stmt->close();
+        }
+    } else {
+        // Check if new columns exist, add them if not
+        $columns = $conn->query("SHOW COLUMNS FROM admin LIKE 'email'");
+        if ($columns->num_rows == 0) {
+            $conn->query("ALTER TABLE admin ADD COLUMN email VARCHAR(255)");
+            $conn->query("ALTER TABLE admin ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+            $conn->query("ALTER TABLE admin ADD COLUMN status ENUM('active', 'inactive') DEFAULT 'active'");
         }
     }
     

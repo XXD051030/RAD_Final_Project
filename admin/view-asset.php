@@ -57,7 +57,9 @@ $conn->close();
             display: flex;
             flex-direction: column;
             position: fixed;
-            height: 100vh;
+            left: 0;
+            top: 70px;
+            height: calc(100vh - 70px);
             z-index: 1000;
         }
 
@@ -98,7 +100,7 @@ $conn->close();
             width: 100%;
             text-align: left;
             font-size: 16px;
-            white-space: nowrap;
+            white-space: normal;
         }
 
         .nav-item:hover {
@@ -113,9 +115,11 @@ $conn->close();
             width: 20px;
             height: 20px;
             margin-right: 15px;
+            margin-top: 2px;
             background-color: white;
             border-radius: 3px;
             display: inline-block;
+            flex-shrink: 0;
         }
 
         .logout-section {
@@ -292,9 +296,49 @@ $conn->close();
                 max-height: calc(100vh - 150px); /* Adjust for smaller screens */
             }
         }
+        /* Top Logo Bar */
+        .top-logo-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-bottom: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 1001;
+        }
+
+        .top-logo-bar img {
+            height: 40px;
+            width: auto;
+        }
+
+
+
+        .content {
+            margin-top: 0;
+        }
+
+        @media (max-width: 768px) {
+            .top-logo-bar {
+                padding: 0 20px;
+            }
+            .top-logo-bar img {
+                height: 35px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Top Logo Bar -->
+    <div class="top-logo-bar">
+        <img src="../images/logo/infinecsfull.png" alt="Infinecs - Innovate Frontier Together">
+    </div>
+
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="profile-section">
@@ -310,6 +354,14 @@ $conn->close();
             <a href="AdminDM.php" class="nav-item active">
                 <span class="nav-icon"></span>
                 Device Management
+            </a>
+            <a href="borrow-requests.php" class="nav-item">
+                <span class="nav-icon"></span>
+                Borrow Requests
+            </a>
+            <a href="account-management.php" class="nav-item">
+                <span class="nav-icon"></span>
+                Account Management
             </a>
             <a href="alert.php" class="nav-item">
                 <span class="nav-icon"></span>
