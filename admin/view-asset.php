@@ -1,5 +1,8 @@
 <?php
 session_start();
+
+require_once '../database/auto_database_check.php';
+
 $conn = new mysqli("localhost", "root", "", "rad");
 
 if ($conn->connect_error) {

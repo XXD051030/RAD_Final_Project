@@ -5,6 +5,7 @@ if (!isset($_SESSION['userid']) || !isset($_SESSION['user_logged_in']) || !$_SES
     exit();
 }
 
+require_once '../../database/auto_database_check.php';
 include '../db_connect.php';
 
 // Current date for calculations
@@ -251,6 +252,10 @@ if ($result->num_rows > 0) {
                 <a href="../View.php" class="nav-item">
                     <span class="nav-icon"></span>
                     View
+                </a>
+                <a href="../borrow-status.php" class="nav-item">
+                    <span class="nav-icon"></span>
+                    Borrow Status
                 </a>
                 <a href="alert.php" class="nav-item">
                     <span class="nav-icon"></span>

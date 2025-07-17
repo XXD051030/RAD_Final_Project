@@ -5,28 +5,72 @@ if (!isset($_SESSION['userid']) || !isset($_SESSION['user_logged_in']) || !$_SES
     exit();
 }
 
+require_once '../../database/auto_database_check.php';
 include '../db_connect.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $asset_name = $_POST['Asset_Name'];
-    $serial_number = $_POST['Serial_Number'];
-    $purchase_date = $_POST['Purchase_Date'];
-    $warranty_expiry = $_POST['Warranty_Expiry'];
-    $status = $_POST['Status'];
-
-    $sql = "INSERT INTO assets (Asset_Name, Serial_Number, Purchase_Date, Warranty_Expiry, Status) VALUES (?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssss", $asset_name, $serial_number, $purchase_date, $warranty_expiry, $status);
-
-    if ($stmt->execute()) {
-        header("Location: ../View.php");
-    } else {
-        $error_message = "Error: " . $conn->error;
-    }
-
-    $stmt->close();
-    $conn->close();
+// Check for success message from session
+$success_message = '';
+$error_message = '';
+if (isset($_SESSION['success_message'])) {
+    $success_message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
 }
+
+// Get available assets for borrowing
+$assets_sql = "SELECT Asset_ID, Asset_Name, Serial_Number, Category, Brand_Model, Status FROM assets WHERE Status = 'Active'";
+$assets_result = $conn->query($assets_sql);
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $asset_id = $_POST['asset_id'];
+    $borrow_start_date = $_POST['borrow_start_date'];
+    $borrow_end_date = $_POST['borrow_end_date'];
+    $user_id = $_SESSION['userid'];
+
+    try {
+        // Get asset details
+        $asset_sql = "SELECT Asset_Name FROM assets WHERE Asset_ID = ?";
+        $stmt = $conn->prepare($asset_sql);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+        
+        $stmt->bind_param("s", $asset_id);
+        $stmt->execute();
+        $asset_result = $stmt->get_result();
+        $asset = $asset_result->fetch_assoc();
+        
+        if (!$asset) {
+            throw new Exception("Asset not found");
+        }
+
+        // Insert borrow request
+        $insert_sql = "INSERT INTO borrow_requests (user_id, asset_id, asset_name, borrow_date, return_date) VALUES (?, ?, ?, ?, ?)";
+        $insert_stmt = $conn->prepare($insert_sql);
+        if (!$insert_stmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+        
+        $insert_stmt->bind_param("sssss", $user_id, $asset_id, $asset['Asset_Name'], $borrow_start_date, $borrow_end_date);
+
+        if ($insert_stmt->execute()) {
+            $_SESSION['success_message'] = "Your borrow request has been submitted successfully! It is now pending admin approval.";
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
+        } else {
+            throw new Exception("Execute failed: " . $insert_stmt->error);
+        }
+
+        $stmt->close();
+        $insert_stmt->close();
+        
+    } catch (Exception $e) {
+        $error_message = "Error submitting request: " . $e->getMessage();
+        if (isset($stmt)) $stmt->close();
+        if (isset($insert_stmt)) $insert_stmt->close();
+    }
+}
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -35,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Borrow Asset</title>
+    <title>Submit Borrow Request</title>
     <style>
         * {
             margin: 0;
@@ -62,6 +106,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             display: flex;
             flex-direction: column;
             position: fixed;
+            left: 0;
+            top: 0;
             height: 100vh;
             z-index: 1000;
         }
@@ -260,7 +306,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-weight: bold;
         }
 
-        .section-icon.asset-info {
+        .section-icon.asset-select {
             background-color: #e3f2fd;
             color: #1976d2;
         }
@@ -268,11 +314,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .section-icon.schedule {
             background-color: #fff3e0;
             color: #f57c00;
-        }
-
-        .section-icon.status {
-            background-color: #e8f5e8;
-            color: #388e3c;
         }
 
         .section-title {
@@ -343,18 +384,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
         }
 
-        /* Status Badge */
-        .status-preview {
-            display: inline-block;
-            padding: 6px 12px;
-            background-color: #d4edda;
-            color: #155724;
-            border-radius: 12px;
-            font-size: 12px;
+        /* Asset Selection Table */
+        .asset-selection {
+            margin-top: 15px;
+        }
+
+        .asset-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .asset-table th {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 8px;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+        }
+
+        .asset-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .asset-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .asset-radio {
+            margin: 0;
         }
 
         /* Form Actions */
@@ -420,21 +485,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         /* Info Box */
         .info-box {
-            background-color: #cce7ff;
-            border: 1px solid #66d1ff;
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
         }
 
         .info-box h4 {
-            color: #0066cc;
+            color: #1976d2;
             margin-bottom: 8px;
             font-size: 16px;
         }
 
         .info-box p {
-            color: #004080;
+            color: #1565c0;
             font-size: 14px;
             line-height: 1.4;
             margin: 0;
@@ -490,9 +555,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <span class="nav-icon"></span>
                     Dashboard
                 </a>
-                <a href="../View.php" class="nav-item active">
+                <a href="../View.php" class="nav-item">
                     <span class="nav-icon"></span>
                     View
+                </a>
+                <a href="../borrow-status.php" class="nav-item">
+                    <span class="nav-icon"></span>
+                    Borrow Status
                 </a>
                 <a href="alert.php" class="nav-item">
                     <span class="nav-icon"></span>
@@ -507,49 +576,80 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <!-- Main Content -->
         <div class="main-content">
-            <?php if (isset($error_message)): ?>
+            <?php if (!empty($error_message)): ?>
                 <div class="error">
                     <strong>Error:</strong> <?php echo htmlspecialchars($error_message); ?>
                 </div>
             <?php endif; ?>
 
+            <?php if (!empty($success_message)): ?>
+                <div class="success">
+                    <strong>Success:</strong> <?php echo htmlspecialchars($success_message); ?>
+                    <br><br>
+                    <a href="../borrow-status.php" style="color: #0f5132; text-decoration: underline;">View your request status here</a>
+                </div>
+            <?php endif; ?>
+
             <div class="header-section">
-                <h1 class="page-title">Borrow Asset</h1>
+                <h1 class="page-title">Submit Borrow Request</h1>
                 <div class="breadcrumb">
                     <a href="dashboard.php">Dashboard</a> / 
                     <a href="../View.php">View</a> / 
-                    Borrow Asset
+                    Submit Borrow Request
                 </div>
                 <a href="../View.php" class="back-button">Back to Asset List</a>
             </div>
 
             <div class="info-box">
-                <h4>📋 Asset Borrowing Information</h4>
-                <p>Fill in the asset details below to add a new borrowed item to the system. All required fields must be completed before submission.</p>
+                <h4>📋 Borrow Request Information</h4>
+                <p>Select an asset from the available list below and specify your borrowing period. Your request will be sent to the admin for approval.</p>
             </div>
 
             <div class="form-container">
                 <div class="form-header">
-                    <h2>New Asset Registration</h2>
-                    <p>Enter the details of the asset you want to borrow</p>
+                    <h2>New Borrow Request</h2>
+                    <p>Choose an asset and specify the borrowing period</p>
                 </div>
 
                 <div class="form-body">
                     <form method="POST">
-                        <!-- Asset Information Section -->
+                        <!-- Asset Selection Section -->
                         <div class="form-section">
                             <div class="section-header">
-                                <div class="section-icon asset-info">📦</div>
-                                <h3 class="section-title">Asset Information</h3>
+                                <div class="section-icon asset-select">📦</div>
+                                <h3 class="section-title">Asset Selection</h3>
                             </div>
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label class="form-label required">Asset Name</label>
-                                    <input type="text" name="Asset_Name" class="form-input" required placeholder="e.g., Dell Laptop, HP Printer">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label required">Serial Number</label>
-                                    <input type="text" name="Serial_Number" class="form-input" required placeholder="e.g., SN-001, ABC123">
+                            
+                            <div class="asset-selection">
+                                <div class="asset-table">
+                                    <table class="asset-table">
+                                        <thead>
+                                            <tr>
+                                                <th width="50">Select</th>
+                                                <th>Asset Name</th>
+                                                <th>Category</th>
+                                                <th>Brand/Model</th>
+                                                <th>Serial Number</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            if ($assets_result->num_rows > 0) {
+                                                while ($asset = $assets_result->fetch_assoc()) {
+                                                    echo "<tr>";
+                                                    echo "<td><input type='radio' name='asset_id' value='" . $asset['Asset_ID'] . "' class='asset-radio' required></td>";
+                                                    echo "<td>" . htmlspecialchars($asset['Asset_Name']) . "</td>";
+                                                    echo "<td>" . htmlspecialchars($asset['Category']) . "</td>";
+                                                    echo "<td>" . htmlspecialchars($asset['Brand_Model']) . "</td>";
+                                                    echo "<td>" . htmlspecialchars($asset['Serial_Number']) . "</td>";
+                                                    echo "</tr>";
+                                                }
+                                            } else {
+                                                echo "<tr><td colspan='5' style='text-align: center; color: #6c757d; padding: 20px;'>No available assets found</td></tr>";
+                                            }
+                                            ?>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -558,41 +658,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <div class="form-section">
                             <div class="section-header">
                                 <div class="section-icon schedule">📅</div>
-                                <h3 class="section-title">Date Information</h3>
+                                <h3 class="section-title">Borrowing Period</h3>
                             </div>
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label class="form-label required">Purchase Date</label>
-                                    <input type="date" name="Purchase_Date" class="form-input" required>
+                                    <label class="form-label required">Start Date</label>
+                                    <input type="date" name="borrow_start_date" class="form-input" required min="<?php echo date('Y-m-d'); ?>">
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label required">Warranty Expiry Date</label>
-                                    <input type="date" name="Warranty_Expiry" class="form-input" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Status Information Section -->
-                        <div class="form-section">
-                            <div class="section-header">
-                                <div class="section-icon status">✅</div>
-                                <h3 class="section-title">Status Configuration</h3>
-                            </div>
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label class="form-label required">Current Status</label>
-                                    <select name="Status" class="form-select" required>
-                                        <option value="">Select status...</option>
-                                        <option value="Active" selected>Active</option>
-                                        <option value="Pending">Pending</option>
-                                        <option value="Under Review">Under Review</option>
-                                    </select>
-                                    <div class="status-preview">ACTIVE</div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Additional Notes</label>
-                                    <input type="text" class="form-input" placeholder="Optional notes or comments" readonly>
-                                    <small style="color: #6c757d; font-size: 12px; margin-top: 4px;">This field is for future enhancements</small>
+                                    <label class="form-label required">End Date</label>
+                                    <input type="date" name="borrow_end_date" class="form-input" required min="<?php echo date('Y-m-d'); ?>">
                                 </div>
                             </div>
                         </div>
@@ -632,22 +707,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             });
         });
 
-        // Status preview update
-        document.querySelector('select[name="Status"]').addEventListener('change', function() {
-            const preview = document.querySelector('.status-preview');
-            preview.textContent = this.value.toUpperCase();
+        // Date validation
+        document.querySelector('input[name="borrow_start_date"]').addEventListener('change', function() {
+            const startDate = this.value;
+            const endDateInput = document.querySelector('input[name="borrow_end_date"]');
+            endDateInput.min = startDate;
             
-            // Update preview colors based on status
-            preview.className = 'status-preview';
-            if (this.value === 'Active') {
-                preview.style.backgroundColor = '#d4edda';
-                preview.style.color = '#155724';
-            } else if (this.value === 'Pending') {
-                preview.style.backgroundColor = '#fff3cd';
-                preview.style.color = '#856404';
-            } else if (this.value === 'Under Review') {
-                preview.style.backgroundColor = '#cce7ff';
-                preview.style.color = '#0066cc';
+            if (endDateInput.value && endDateInput.value < startDate) {
+                endDateInput.value = '';
+            }
+        });
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const assetSelected = document.querySelector('input[name="asset_id"]:checked');
+            if (!assetSelected) {
+                e.preventDefault();
+                alert('Please select an asset to borrow.');
+                return;
+            }
+
+            const startDate = document.querySelector('input[name="borrow_start_date"]').value;
+            const endDate = document.querySelector('input[name="borrow_end_date"]').value;
+            
+            if (new Date(endDate) <= new Date(startDate)) {
+                e.preventDefault();
+                alert('End date must be after start date.');
+                return;
             }
         });
     </script>

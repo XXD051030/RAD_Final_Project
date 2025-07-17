@@ -209,5 +209,5 @@ The system is designed to be self-healing and requires minimal support:
 
 ---
 
-**Last Updated**: December 2024  
-**Version**: 2.0.0 with Dual Portal Automatic Setup 
+**Last Updated**: July 2025  
+**Version**: 1.0 

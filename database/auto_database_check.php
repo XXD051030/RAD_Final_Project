@@ -1,12 +1,10 @@
 <?php
-// Database setup and initialization script
+// Auto database check and initialization script
+// This file is included by login pages to ensure database exists
 $servername = "localhost";
 $username = "root";
 $password = "";
 $dbname = "rad";
-
-echo "<h2>Database Setup Script</h2>";
-echo "<p>Starting database initialization...</p>";
 
 try {
     // First, connect to MySQL server without specifying database
@@ -14,83 +12,71 @@ try {
     
     // Check connection
     if ($conn->connect_error) {
-        die("<p style='color: red;'>Connection failed: " . $conn->connect_error . "</p>");
+        error_log("Database connection failed: " . $conn->connect_error);
+        return;
     }
     
-    echo "<p style='color: green;'>✓ Connected to MySQL server successfully</p>";
-    
-    // Check if database exists
+    // Check if database exists, create if not
     $result = $conn->query("SHOW DATABASES LIKE '$dbname'");
-    
     if ($result->num_rows == 0) {
-        // Database doesn't exist, create it
-        echo "<p style='color: orange;'>Database '$dbname' does not exist. Creating...</p>";
-        
         $sql = "CREATE DATABASE $dbname";
-        if ($conn->query($sql) === TRUE) {
-            echo "<p style='color: green;'>✓ Database '$dbname' created successfully</p>";
-        } else {
-            die("<p style='color: red;'>Error creating database: " . $conn->error . "</p>");
+        if (!$conn->query($sql)) {
+            error_log("Error creating database: " . $conn->error);
+            return;
         }
-    } else {
-        echo "<p style='color: green;'>✓ Database '$dbname' already exists</p>";
     }
     
-    // Now connect to the specific database
+    // Connect to the specific database
     $conn->select_db($dbname);
     
-    // Check if users table exists
+    // Create users table if not exists
     $result = $conn->query("SHOW TABLES LIKE 'users'");
-    
     if ($result->num_rows == 0) {
-        // Table doesn't exist, create it
-        echo "<p style='color: orange;'>Table 'users' does not exist. Creating...</p>";
-        
         $sql = "CREATE TABLE users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             userID VARCHAR(255) NOT NULL UNIQUE,
             password VARCHAR(255) NOT NULL
         )";
         
-if ($conn->query($sql) === TRUE) {
-    echo "<p style='color: green;'>✓ Table 'users' created successfully</p>";
-    
-    // Insert a test user with hashed password
-    $testUser = "user1";
-    $testPassword = password_hash("user123", PASSWORD_DEFAULT); // Hash the password
-    
-    $insertSql = "INSERT INTO users (userID, password) VALUES (?, ?)";
-    $stmt = $conn->prepare($insertSql);
-    $stmt->bind_param("ss", $testUser, $testPassword);
-    
-    if ($stmt->execute()) {
-        echo "<p style='color: blue;'>✓ Test user created (UserID: user1, Password: user123)</p>";
-    } else {
-        echo "<p style='color: red;'>Error creating test user: " . $stmt->error . "</p>";
-    }
-    $stmt->close();
-    
-} else {
-    die("<p style='color: red;'>Error creating table 'users': " . $conn->error . "</p>");
-
+        if ($conn->query($sql)) {
+            // Insert default user
+            $testUser = "user1";
+            $testPassword = password_hash("user123", PASSWORD_DEFAULT);
+            
+            $insertSql = "INSERT INTO users (userID, password) VALUES (?, ?)";
+            $stmt = $conn->prepare($insertSql);
+            $stmt->bind_param("ss", $testUser, $testPassword);
+            $stmt->execute();
+            $stmt->close();
         }
-    } else {
-        echo "<p style='color: green;'>✓ Table 'users' already exists</p>";
-        
-        // Check if table has any users
-        $result = $conn->query("SELECT COUNT(*) as count FROM users");
-        $row = $result->fetch_assoc();
-        echo "<p style='color: blue;'>Current number of users in database: " . $row['count'] . "</p>";
     }
     
-    // Check if assets table exists
+    // Create admin table if not exists
+    $result = $conn->query("SHOW TABLES LIKE 'admin'");
+    if ($result->num_rows == 0) {
+        $sql = "CREATE TABLE admin (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            adminID VARCHAR(255) NOT NULL UNIQUE,
+            password VARCHAR(255) NOT NULL
+        )";
+        
+        if ($conn->query($sql)) {
+            // Insert default admin
+            $adminUser = "admin";
+            $adminPassword = password_hash("admin123", PASSWORD_DEFAULT);
+            
+            $insertSql = "INSERT INTO admin (adminID, password) VALUES (?, ?)";
+            $stmt = $conn->prepare($insertSql);
+            $stmt->bind_param("ss", $adminUser, $adminPassword);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
+    
+    // Create assets table if not exists
     $assetsTableCreated = false;
     $result = $conn->query("SHOW TABLES LIKE 'assets'");
-    
     if ($result->num_rows == 0) {
-        // Table doesn't exist, create it
-        echo "<p style='color: orange;'>Table 'assets' does not exist. Creating...</p>";
-        
         $sql = "CREATE TABLE assets (
             Asset_ID VARCHAR(10) PRIMARY KEY,
             Asset_Name VARCHAR(100) NOT NULL,
@@ -106,25 +92,33 @@ if ($conn->query($sql) === TRUE) {
             Supplier VARCHAR(100)
         )";
         
-        if ($conn->query($sql) === TRUE) {
-            echo "<p style='color: green;'>✓ Table 'assets' created successfully</p>";
+        if ($conn->query($sql)) {
             $assetsTableCreated = true;
-        } else {
-            die("<p style='color: red;'>Error creating table 'assets': " . $conn->error . "</p>");
         }
-    } else {
-        echo "<p style='color: green;'>✓ Table 'assets' already exists</p>";
-        
-        // Check if table has any assets
-        $result = $conn->query("SELECT COUNT(*) as count FROM assets");
-        $row = $result->fetch_assoc();
-        echo "<p style='color: blue;'>Current number of assets in database: " . $row['count'] . "</p>";
     }
     
-    // Insert sample data into assets table if it was just created
+    // Create borrow_requests table if not exists
+    $result = $conn->query("SHOW TABLES LIKE 'borrow_requests'");
+    if ($result->num_rows == 0) {
+        $sql = "CREATE TABLE borrow_requests (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(255) NOT NULL,
+            asset_id VARCHAR(10) NOT NULL,
+            asset_name VARCHAR(100) NOT NULL,
+            borrow_date DATE NOT NULL,
+            return_date DATE NOT NULL,
+            purpose TEXT,
+            status ENUM('pending', 'approved', 'declined') DEFAULT 'pending',
+            admin_response TEXT,
+            admin_notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )";
+        $conn->query($sql);
+    }
+    
+    // Insert sample assets data if table was just created
     if ($assetsTableCreated) {
-        echo "<p style='color: orange;'>Inserting sample asset data...</p>";
-        
         $assetsData = [
             ['A001', 'Aircon', 'Security', 'Taylor-White 429', 'SN-70946', 'Admin Department', 'Priya A/P Kumar', '2024-04-23', '2027-04-23', 1481.00, 'Retired', 'HP Distributor'],
             ['A002', 'Chair', 'Security', 'Baxter Inc 186', 'SN-47196', 'HR Department', 'Siti Binti Aminah', '2024-02-22', '2027-02-21', 1709.48, 'Active', 'IKEA Malaysia'],
@@ -181,97 +175,20 @@ if ($conn->query($sql) === TRUE) {
         $insertSql = "INSERT INTO assets (Asset_ID, Asset_Name, Category, Brand_Model, Serial_Number, Location, Assigned_To, Purchase_Date, Warranty_Expiry, Asset_Value, Status, Supplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($insertSql);
         
-        $stmt->bind_param("sssssssssdss", $assetID, $assetName, $category, $brandModel, $serialNumber, $location, $assignedTo, $purchaseDate, $warrantyExpiry, $assetValue, $status, $supplier);
-        
-        $successCount = 0;
-        foreach ($assetsData as $data) {
-            list($assetID, $assetName, $category, $brandModel, $serialNumber, $location, $assignedTo, $purchaseDate, $warrantyExpiry, $assetValue, $status, $supplier) = $data;
-            if ($stmt->execute()) {
-                $successCount++;
-            } else {
-                echo "<p style='color: red;'>Error inserting asset $assetID: " . $stmt->error . "</p>";
+        if ($stmt) {
+            $stmt->bind_param("sssssssssdss", $assetID, $assetName, $category, $brandModel, $serialNumber, $location, $assignedTo, $purchaseDate, $warrantyExpiry, $assetValue, $status, $supplier);
+            
+            foreach ($assetsData as $data) {
+                list($assetID, $assetName, $category, $brandModel, $serialNumber, $location, $assignedTo, $purchaseDate, $warrantyExpiry, $assetValue, $status, $supplier) = $data;
+                $stmt->execute();
             }
+            $stmt->close();
         }
-        
-        $stmt->close();
-        echo "<p style='color: green;'>✓ Inserted $successCount out of 50 assets successfully</p>";
     }
-    
-    // Display table structure for both users and assets
-    echo "<h3>Current table structure:</h3>";
-    $tables = ['users', 'assets'];
-    foreach ($tables as $table) {
-        $result = $conn->query("DESCRIBE $table");
-        echo "<h4>Table: $table</h4>";
-        echo "<table border='1' style='border-collapse: collapse; margin: 10px 0;'>";
-        echo "<tr><th>Field</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr>";
-        
-        while ($row = $result->fetch_assoc()) {
-            echo "<tr>";
-            echo "<td>" . $row['Field'] . "</td>";
-            echo "<td>" . $row['Type'] . "</td>";
-            echo "<td>" . $row['Null'] . "</td>";
-            echo "<td>" . $row['Key'] . "</td>";
-            echo "<td>" . $row['Default'] . "</td>";
-            echo "<td>" . $row['Extra'] . "</td>";
-            echo "</tr>";
-        }
-        echo "</table>";
-    }
-    
-    echo "<h3>Setup Complete!</h3>";
-    echo "<p style='color: green;'>✓ Database and tables are ready for use</p>";
-    echo "<p><a href='login.php'>Go to Login Page</a></p>";
     
     $conn->close();
     
 } catch (Exception $e) {
-    echo "<p style='color: red;'>Error: " . $e->getMessage() . "</p>";
+    error_log("Auto database setup error: " . $e->getMessage());
 }
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Setup</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        h2, h3, h4 {
-            color: #333;
-        }
-        table {
-            background-color: white;
-            width: 100%;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        a {
-            display: inline-block;
-            background-color: #007bff;
-            color: white;
-            padding: 10px 15px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-        a:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
-</body>
-</html>
+?> 

@@ -1,5 +1,8 @@
 <?php
 session_start();
+
+require_once '../database/auto_database_check.php';
+
 $conn = new mysqli("localhost", "root", "", "rad");
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -11,15 +14,15 @@ $alertMessages = [];
 $today = new DateTime();
 $inSixMonths = (clone $today)->modify('+6 months');
 
-$result = $conn->query("SELECT asset_name, serial_number, Warranty_Expiry FROM assets");
+$result = $conn->query("SELECT Asset_Name, Serial_Number, Warranty_Expiry FROM assets");
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $warrantyEnd = new DateTime($row['Warranty_Expiry']);
         if ($warrantyEnd >= $today && $warrantyEnd <= $inSixMonths) {
             $daysLeft = $today->diff($warrantyEnd)->days;
             $alertMessages[] = [
-                'name' => $row['asset_name'],
-                'serial_number' => $row['serial_number'],
+                'name' => $row['Asset_Name'],
+                'serial_number' => $row['Serial_Number'],
                 'warranty_end' => $warrantyEnd->format('Y-m-d'),
                 'days_left' => $daysLeft
             ];
@@ -271,20 +274,24 @@ if ($columnExists) {
             <p>Welcome, <?php echo htmlspecialchars($_SESSION['adminID']); ?>!</p>
         </div>
         
-        <nav class="nav-menu">
-            <a href="dashboard.php" class="nav-item">
-                <span class="nav-icon"></span>
-                Dashboard
-            </a>
-            <a href="AdminDM.php" class="nav-item">
-                <span class="nav-icon"></span>
-                Device Management
-            </a>
-            <a href="alert.php" class="nav-item active">
-                <span class="nav-icon"></span>
-                Alert
-            </a>
-        </nav>
+                    <nav class="nav-menu">
+                <a href="dashboard.php" class="nav-item">
+                    <span class="nav-icon"></span>
+                    Dashboard
+                </a>
+                <a href="AdminDM.php" class="nav-item">
+                    <span class="nav-icon"></span>
+                    Device Management
+                </a>
+                <a href="borrow-requests.php" class="nav-item">
+                    <span class="nav-icon"></span>
+                    Borrow Requests
+                </a>
+                <a href="alert.php" class="nav-item active">
+                    <span class="nav-icon"></span>
+                    Alert
+                </a>
+            </nav>
 
         <div class="logout-section">
             <button class="logout-btn" onclick="logout()">Log Out</button>

@@ -47,14 +47,13 @@ echo "<p><strong>Next Steps for Admin Testing:</strong></p>";
 echo "<ol>";
 echo "<li><a href='login.php' target='_blank'>Visit Admin Login Page</a> to test automatic database creation</li>";
 echo "<li>The system should silently create the database in the background</li>";
-echo "<li>Login with: <strong>AdminID: admin123</strong> | <strong>Password: 123456</strong></li>";
+echo "<li>Login with: <strong>AdminID: admin</strong> | <strong>Password: admin123</strong></li>";
 echo "</ol>";
 
 echo "<hr>";
 echo "<p><strong>Alternative Testing Links:</strong></p>";
 echo "<ul>";
-echo "<li><a href='../../user/user/login.php' target='_blank'>User Login Page</a> (UserID: user1 | Password: user123)</li>";
-echo "<li><a href='../../user/user/delete_database.php' target='_blank'>User Database Deletion Script</a></li>";
+echo "<li><a href='../user/login.php' target='_blank'>User Login Page</a> (UserID: user1 | Password: user123)</li>";
 echo "</ul>";
 
 echo "<p><em>Note: This script is for testing purposes only. In production, database deletion should be handled carefully.</em></p>";

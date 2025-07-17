@@ -8,11 +8,29 @@ if (!isset($_SESSION['userid']) || !isset($_SESSION['user_logged_in']) || !$_SES
 require_once '../database/auto_database_check.php';
 include 'db_connect.php';
 
-// Query to get all assets
-$sql = "SELECT Asset_Name, Serial_Number, Purchase_Date, Warranty_Expiry, Status FROM assets";
-$result = $conn->query($sql);
+// Get the current user's borrow requests
+$user_id = $_SESSION['userid'];
+$sql = "SELECT * FROM borrow_requests WHERE user_id = ? ORDER BY created_at DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
 
-// Close connection at the end
+// Calculate stats for the user
+$stats_sql = "SELECT 
+    COUNT(*) as total,
+    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+    SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+    SUM(CASE WHEN status = 'declined' THEN 1 ELSE 0 END) as declined
+    FROM borrow_requests WHERE user_id = ?";
+$stats_stmt = $conn->prepare($stats_sql);
+$stats_stmt->bind_param("s", $user_id);
+$stats_stmt->execute();
+$stats_result = $stats_stmt->get_result();
+$stats = $stats_result->fetch_assoc();
+
+$stmt->close();
+$stats_stmt->close();
 $conn->close();
 ?>
 
@@ -21,7 +39,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User View</title>
+    <title>Borrow Request Status</title>
     <style>
         * {
             margin: 0;
@@ -41,13 +59,15 @@ $conn->close();
         }
 
         /* Sidebar Styles */
-       .sidebar {
+        .sidebar {
             width: 240px;
             background-color: #6b7c93;
             color: white;
             display: flex;
             flex-direction: column;
             position: fixed;
+            left: 0;
+            top: 0;
             height: 100vh;
             z-index: 1000;
         }
@@ -142,15 +162,44 @@ $conn->close();
             margin-bottom: 30px;
         }
 
-        /* Asset Section */
-        .asset-section {
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.3;
+        }
+
+        /* Status Section */
+        .status-section {
             background: white;
             border: 2px solid #333;
             border-radius: 8px;
             overflow: hidden;
         }
 
-        .asset-header {
+        .status-header {
             background: white;
             padding: 20px 25px;
             border-bottom: 2px solid #333;
@@ -162,55 +211,32 @@ $conn->close();
             align-items: center;
         }
 
-        .asset-buttons {
-            display: flex;
-            gap: 12px;
-        }
-
-        .asset-button {
+        .new-request-btn {
             padding: 10px 18px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .asset-button.track {
             background-color: #4a90e2;
             color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
 
-        .asset-button.track:hover {
+        .new-request-btn:hover {
             background-color: #357abd;
             transform: translateY(-1px);
         }
 
-        .asset-button.borrow {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .asset-button.borrow:hover {
-            background-color: #218838;
-            transform: translateY(-1px);
-        }
-
-        .asset-table-container {
+        .status-table-container {
             overflow-x: auto;
         }
 
-        .asset-table {
+        .status-table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        .asset-table th {
+        .status-table th {
             background-color: #f8f9fa;
             padding: 15px 25px;
             text-align: left;
@@ -220,18 +246,18 @@ $conn->close();
             font-size: 16px;
         }
 
-        .asset-table td {
+        .status-table td {
             padding: 15px 25px;
             border-bottom: 1px solid #dee2e6;
             color: #333;
         }
 
-        .asset-table tr {
+        .status-table tr {
             background-color: #e3f2fd;
             transition: background-color 0.2s ease;
         }
 
-        .asset-table tr:hover {
+        .status-table tr:hover {
             background-color: #bbdefb;
         }
 
@@ -245,22 +271,32 @@ $conn->close();
             letter-spacing: 0.5px;
         }
 
-        .status-active {
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status-approved {
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
 
-        .status-retired {
+        .status-declined {
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
 
-        .status-repair {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
+        .admin-notes {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+            border-left: 3px solid #007bff;
         }
 
         .empty-state {
@@ -283,34 +319,76 @@ $conn->close();
         .empty-state-subtext {
             font-size: 14px;
             opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-btn {
+            padding: 12px 24px;
+            background-color: #4a90e2;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .empty-state-btn:hover {
+            background-color: #357abd;
+            transform: translateY(-1px);
+        }
+
+        /* Info Box */
+        .info-box {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .info-box p {
+            color: #1565c0;
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 0;
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
-           .sidebar {
+            .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
             }
 
-           .sidebar.mobile-open {
+            .sidebar.mobile-open {
                 transform: translateX(0);
             }
 
-           .main-content {
+            .main-content {
                 margin-left: 0;
                 padding: 20px;
             }
 
-           .stats-grid {
+            .stats-grid {
                 grid-template-columns: 1fr;
             }
 
-           .dashboard-header {
+            .dashboard-header {
                 font-size: 24px;
             }
 
-           .asset-buttons {
+            .status-header {
                 flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
             }
         }
     </style>
@@ -325,19 +403,19 @@ $conn->close();
             </div>
             
             <nav class="nav-menu">
-                <a href="../user/dashboard/dashboard.php" class="nav-item">
+                <a href="dashboard/dashboard.php" class="nav-item">
                     <span class="nav-icon"></span>
                     Dashboard
                 </a>
-                <a href="View.php" class="nav-item active">
+                <a href="View.php" class="nav-item">
                     <span class="nav-icon"></span>
                     View
                 </a>
-                <a href="borrow-status.php" class="nav-item">
+                <a href="borrow-status.php" class="nav-item active">
                     <span class="nav-icon"></span>
                     Borrow Status
                 </a>
-                <a href="../user/dashboard/alert.php" class="nav-item">
+                <a href="dashboard/alert.php" class="nav-item">
                     <span class="nav-icon"></span>
                     Alert
                 </a>
@@ -350,59 +428,87 @@ $conn->close();
 
         <!-- Main Content -->
         <div class="main-content">
-            <h1 class="dashboard-header">View</h1>
+            <h1 class="dashboard-header">Borrow Request Status</h1>
             
-            <!-- Asset Section -->
-            <div class="asset-section">
-                <div class="asset-header">
-                    <span>Assets</span>
-                    <div class="asset-buttons">
-                        <a href="../user/dashboard/borrow.php" class="asset-button borrow">
-                            ➕ Borrow Asset
-                        </a>
+            <?php if ($stats['total'] > 0): ?>
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number"><?php echo $stats['total']; ?></div>
+                        <div class="stat-label">Total<br>Requests</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number"><?php echo $stats['pending']; ?></div>
+                        <div class="stat-label">Pending<br>Requests</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number"><?php echo $stats['approved']; ?></div>
+                        <div class="stat-label">Approved<br>Requests</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number"><?php echo $stats['declined']; ?></div>
+                        <div class="stat-label">Declined<br>Requests</div>
                     </div>
                 </div>
-                <div class="asset-table-container">
-                    <table class="asset-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Serial Number</th>
-                                <th>Purchase Date</th>
-                                <th>Warranty Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
+            <?php endif; ?>
+
+            <?php if ($stats['pending'] > 0): ?>
+                <div class="info-box">
+                    <h4>⏳ Pending Requests</h4>
+                    <p>You have <?php echo $stats['pending']; ?> pending request(s) waiting for admin approval. You will be notified once the status is updated.</p>
+                </div>
+            <?php endif; ?>
+            
+            <!-- Status Section -->
+            <div class="status-section">
+                <div class="status-header">
+                    <span>My Borrow Requests</span>
+                    <a href="dashboard/borrow.php" class="new-request-btn">
+                        ➕ New Request
+                    </a>
+                </div>
+                <div class="status-table-container">
+                    <table class="status-table">
+                                                    <thead>
+                                <tr>
+                                    <th>Request ID</th>
+                                    <th>Asset Name</th>
+                                    <th>Asset ID</th>
+                                    <th>Request Date</th>
+                                    <th>Status</th>
+                                    <th>Admin Response</th>
+                                </tr>
+                            </thead>
                         <tbody>
                             <?php
                             if ($result->num_rows > 0) {
                                 while ($row = $result->fetch_assoc()) {
-                                    // Determine status CSS class based on status value
-                                    $status = strtolower(trim($row['Status']));
-                                    $statusClass = 'status-active'; // default
-                                    
-                                    switch ($status) {
-                                        case 'retired':
-                                            $statusClass = 'status-retired';
-                                            break;
-                                        case 'in repair':
-                                            $statusClass = 'status-repair';
-                                            break;
-                                        case 'active':
-                                            $statusClass = 'status-active';
-                                            break;
-                                    }
-                                    
+                                    $statusClass = 'status-' . strtolower($row['status']);
                                     echo "<tr>";
-                                    echo "<td>" . htmlspecialchars($row['Asset_Name']) . "</td>";
-                                    echo "<td>" . htmlspecialchars($row['Serial_Number']) . "</td>";
-                                    echo "<td>" . (new DateTime($row['Purchase_Date']))->format('d/m/Y') . "</td>";
-                                    echo "<td>" . (new DateTime($row['Warranty_Expiry']))->format('d/m/Y') . "</td>";
-                                    echo "<td><span class='status-badge $statusClass'>" . htmlspecialchars($row['Status']) . "</span></td>";
+                                    echo "<td>#" . $row['id'] . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['asset_name']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['asset_id']) . "</td>";
+                                    echo "<td>" . date('M j, Y', strtotime($row['created_at'])) . "</td>";
+                                    echo "<td><span class='status-badge $statusClass'>" . $row['status'] . "</span></td>";
+                                    echo "<td>";
+                                    if ($row['updated_at'] != $row['created_at']) {
+                                        echo "<small style='color: #6c757d;'>Processed on " . date('M j, Y', strtotime($row['updated_at'])) . "</small>";
+                                        if ($row['admin_notes']) {
+                                            echo "<div class='admin-notes'><strong>Admin Notes:</strong> " . htmlspecialchars($row['admin_notes']) . "</div>";
+                                        }
+                                    } else {
+                                        echo "<span style='color: #856404; font-size: 12px;'>Awaiting review</span>";
+                                    }
+                                    echo "</td>";
                                     echo "</tr>";
                                 }
                             } else {
-                                echo "<tr><td colspan='5' class='empty-state'><div class='empty-state-icon'>⚠️</div><div class='empty-state-text'>No assets found</div><div class='empty-state-subtext'>Please check back later or add new assets.</div></td></tr>";
+                                echo "<tr><td colspan='6' class='empty-state'>";
+                                echo "<div class='empty-state-icon'>📋</div>";
+                                echo "<div class='empty-state-text'>No borrow requests yet</div>";
+                                echo "<div class='empty-state-subtext'>Start by submitting your first borrow request</div>";
+                                echo "<a href='dashboard/borrow.php' class='empty-state-btn'>Submit Request</a>";
+                                echo "</td></tr>";
                             }
                             ?>
                         </tbody>
@@ -411,11 +517,10 @@ $conn->close();
             </div>
         </div>
     </div>
-    
+
     <script>
         function logout() {
             if (confirm('Are you sure you want to log out?')) {
-                // Clear session data
                 window.location.href = 'logout.php';
             }
         }
@@ -437,4 +542,4 @@ $conn->close();
         });
     </script>
 </body>
-</html>
+</html> 

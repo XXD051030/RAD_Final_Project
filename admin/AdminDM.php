@@ -1,5 +1,8 @@
 <?php
 session_start();
+
+require_once '../database/auto_database_check.php';
+
 $conn = new mysqli("localhost", "root", "", "rad");
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -282,6 +285,10 @@ $conn->close();
             <a href="AdminDM.php" class="nav-item active">
                 <span class="nav-icon"></span>
                 Device Management
+            </a>
+            <a href="borrow-requests.php" class="nav-item">
+                <span class="nav-icon"></span>
+                Borrow Requests
             </a>
             <a href="alert.php" class="nav-item">
                 <span class="nav-icon"></span>

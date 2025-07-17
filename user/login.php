@@ -1,5 +1,6 @@
 <?php
 session_start(); // Start session at the beginning
+require_once '../database/auto_database_check.php';
 include 'db_connect_safe.php';
 
 // Get database status

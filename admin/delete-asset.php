@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+require_once '../database/auto_database_check.php';
+
 // Connect to database
 $conn = new mysqli("localhost", "root", "", "rad");
 if ($conn->connect_error) {
@@ -288,7 +290,7 @@ if (!empty($assets)) {
         <?php if (isset($_GET['deleted'])): ?>
             <p style="color: green; font-weight: bold;">✅ Asset successfully deleted!</p>
         <?php endif; ?>
-        <?php if (isset($error_message)): ?>
+        <?php if (!empty($error_message)): ?>
             <p style="color: red; font-weight: bold;"><?php echo htmlspecialchars($error_message); ?></p>
         <?php endif; ?>
         <h2><span class="highlight">Admin</span> Device Management</h2>

@@ -5,6 +5,7 @@ if (!isset($_SESSION['adminID']) || !isset($_SESSION['admin_logged_in']) || $_SE
     exit();
 }
 
+require_once '../database/auto_database_check.php';
 include 'db_connect.php';
 
 // Current date for calculations
@@ -254,6 +255,10 @@ if ($result->num_rows > 0) {
                 <a href="AdminDM.php" class="nav-item">
                     <span class="nav-icon"></span>
                     Device Management
+                </a>
+                <a href="borrow-requests.php" class="nav-item">
+                    <span class="nav-icon"></span>
+                    Borrow Requests
                 </a>
                 <a href="alert.php" class="nav-item">
                     <span class="nav-icon"></span>
